@@ -562,24 +562,24 @@ case $targetos in
 CYGWIN*)
   mingw32="yes"
   QEMU_CFLAGS="-mno-cygwin $QEMU_CFLAGS"
-  audio_possible_drivers="winwave sdl"
+  audio_possible_drivers="winwave"
   audio_drv_list="winwave"
 ;;
 MINGW32*)
   mingw32="yes"
-  audio_possible_drivers="winwave dsound sdl"
+  audio_possible_drivers="winwave dsound"
   audio_drv_list="winwave"
 ;;
 GNU/kFreeBSD)
   bsd="yes"
   audio_drv_list="oss"
-  audio_possible_drivers="oss sdl pa"
+  audio_possible_drivers="oss pa"
 ;;
 FreeBSD)
   bsd="yes"
   make="${MAKE-gmake}"
   audio_drv_list="oss"
-  audio_possible_drivers="oss sdl pa"
+  audio_possible_drivers="oss pa"
   # needed for kinfo_getvmmap(3) in libutil.h
   LIBS="-lutil $LIBS"
   netmap=""  # enable netmap autodetect
@@ -589,22 +589,20 @@ DragonFly)
   bsd="yes"
   make="${MAKE-gmake}"
   audio_drv_list="oss"
-  audio_possible_drivers="oss sdl pa"
+  audio_possible_drivers="oss pa"
   HOST_VARIANT_DIR="dragonfly"
 ;;
 NetBSD)
   bsd="yes"
   make="${MAKE-gmake}"
   audio_drv_list="oss"
-  audio_possible_drivers="oss sdl"
+  audio_possible_drivers="oss"
   oss_lib="-lossaudio"
   HOST_VARIANT_DIR="netbsd"
 ;;
 OpenBSD)
   bsd="yes"
   make="${MAKE-gmake}"
-  audio_drv_list="sdl"
-  audio_possible_drivers="sdl"
   HOST_VARIANT_DIR="openbsd"
 ;;
 Darwin)
@@ -617,7 +615,7 @@ Darwin)
   fi
   cocoa="yes"
   audio_drv_list="coreaudio"
-  audio_possible_drivers="coreaudio sdl"
+  audio_possible_drivers="coreaudio"
   LDFLAGS="-framework CoreFoundation -framework IOKit $LDFLAGS"
   libs_softmmu="-F/System/Library/Frameworks -framework Cocoa -framework IOKit $libs_softmmu"
   # Disable attempts to use ObjectiveC features in os/object.h since they
@@ -651,7 +649,7 @@ SunOS)
   if test -f /usr/include/sys/soundcard.h ; then
     audio_drv_list="oss"
   fi
-  audio_possible_drivers="oss sdl"
+  audio_possible_drivers="oss"
 # needed for CMSG_ macros in sys/socket.h
   QEMU_CFLAGS="-D_XOPEN_SOURCE=600 $QEMU_CFLAGS"
 # needed for TIOCWIN* defines in termios.h
@@ -672,7 +670,7 @@ Haiku)
 ;;
 *)
   audio_drv_list="oss"
-  audio_possible_drivers="oss alsa sdl pa"
+  audio_possible_drivers="oss alsa pa"
   linux="yes"
   linux_user="yes"
   kvm="yes"
@@ -2630,8 +2628,8 @@ for drv in $audio_drv_list; do
       libs_softmmu="$oss_lib $libs_softmmu"
     ;;
 
-    sdl|wav)
-    # XXX: Probes for CoreAudio, DirectSound, SDL(?)
+    wav)
+    # XXX: Probes for CoreAudio, DirectSound
     ;;
 
     winwave)
