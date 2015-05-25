@@ -562,13 +562,11 @@ case $targetos in
 CYGWIN*)
   mingw32="yes"
   QEMU_CFLAGS="-mno-cygwin $QEMU_CFLAGS"
-  audio_possible_drivers="winwave"
-  audio_drv_list="winwave"
 ;;
 MINGW32*)
   mingw32="yes"
-  audio_possible_drivers="winwave dsound"
-  audio_drv_list="winwave"
+  audio_possible_drivers="dsound"
+  audio_drv_list="dsound"
 ;;
 GNU/kFreeBSD)
   bsd="yes"
@@ -2630,11 +2628,6 @@ for drv in $audio_drv_list; do
 
     wav)
     # XXX: Probes for CoreAudio, DirectSound
-    ;;
-
-    winwave)
-      libs_softmmu="-lwinmm $libs_softmmu"
-      audio_win_int="yes"
     ;;
 
     *)
