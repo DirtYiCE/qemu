@@ -819,13 +819,16 @@ static void alsa_fini_out (HWVoiceOut *hw)
     alsa->pcm_buf = NULL;
 }
 
-static int alsa_init_out (HWVoiceOut *hw, struct audsettings *as)
+static int alsa_init_out(HWVoiceOut *hw, struct audsettings *as,
+                         void *drv_opaque)
 {
     ALSAVoiceOut *alsa = (ALSAVoiceOut *) hw;
     struct alsa_params_req req;
     struct alsa_params_obt obt;
     snd_pcm_t *handle;
     struct audsettings obt_as;
+
+    (void) drv_opaque;
 
     req.fmt = aud_to_alsafmt (as->fmt, as->endianness);
     req.freq = as->freq;
@@ -928,13 +931,15 @@ static int alsa_ctl_out (HWVoiceOut *hw, int cmd, ...)
     return -1;
 }
 
-static int alsa_init_in (HWVoiceIn *hw, struct audsettings *as)
+static int alsa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 {
     ALSAVoiceIn *alsa = (ALSAVoiceIn *) hw;
     struct alsa_params_req req;
     struct alsa_params_obt obt;
     snd_pcm_t *handle;
     struct audsettings obt_as;
+
+    (void) drv_opaque;
 
     req.fmt = aud_to_alsafmt (as->fmt, as->endianness);
     req.freq = as->freq;

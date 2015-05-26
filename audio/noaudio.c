@@ -63,8 +63,9 @@ static int no_write (SWVoiceOut *sw, void *buf, int len)
     return audio_pcm_sw_write (sw, buf, len);
 }
 
-static int no_init_out (HWVoiceOut *hw, struct audsettings *as)
+static int no_init_out(HWVoiceOut *hw, struct audsettings *as, void *drv_opaque)
 {
+    (void) drv_opaque;
     audio_pcm_init_info (&hw->info, as);
     hw->samples = 1024;
     return 0;
@@ -82,8 +83,9 @@ static int no_ctl_out (HWVoiceOut *hw, int cmd, ...)
     return 0;
 }
 
-static int no_init_in (HWVoiceIn *hw, struct audsettings *as)
+static int no_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 {
+    (void) drv_opaque;
     audio_pcm_init_info (&hw->info, as);
     hw->samples = 1024;
     return 0;

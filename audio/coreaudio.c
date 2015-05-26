@@ -287,7 +287,8 @@ static int coreaudio_write (SWVoiceOut *sw, void *buf, int len)
     return audio_pcm_sw_write (sw, buf, len);
 }
 
-static int coreaudio_init_out (HWVoiceOut *hw, struct audsettings *as)
+static int coreaudio_init_out(HWVoiceOut *hw, struct audsettings *as,
+                              void *drv_opaque)
 {
     OSStatus status;
     coreaudioVoiceOut *core = (coreaudioVoiceOut *) hw;
@@ -295,6 +296,8 @@ static int coreaudio_init_out (HWVoiceOut *hw, struct audsettings *as)
     int err;
     const char *typ = "playback";
     AudioValueRange frameRange;
+
+    (void) drv_opaque;
 
     /* create mutex */
     err = pthread_mutex_init(&core->mutex, NULL);

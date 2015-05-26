@@ -115,10 +115,13 @@ static int rate_get_samples (struct audio_pcm_info *info, SpiceRateCtl *rate)
 
 /* playback */
 
-static int line_out_init (HWVoiceOut *hw, struct audsettings *as)
+static int line_out_init(HWVoiceOut *hw, struct audsettings *as,
+                         void *drv_opaque)
 {
     SpiceVoiceOut *out = container_of (hw, SpiceVoiceOut, hw);
     struct audsettings settings;
+
+    (void) drv_opaque;
 
 #if SPICE_INTERFACE_PLAYBACK_MAJOR > 1 || SPICE_INTERFACE_PLAYBACK_MINOR >= 3
     settings.freq       = spice_server_get_best_playback_rate(NULL);
@@ -243,10 +246,12 @@ static int line_out_ctl (HWVoiceOut *hw, int cmd, ...)
 
 /* record */
 
-static int line_in_init (HWVoiceIn *hw, struct audsettings *as)
+static int line_in_init(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 {
     SpiceVoiceIn *in = container_of (hw, SpiceVoiceIn, hw);
     struct audsettings settings;
+
+    (void) drv_opaque;
 
 #if SPICE_INTERFACE_RECORD_MAJOR > 2 || SPICE_INTERFACE_RECORD_MINOR >= 3
     settings.freq       = spice_server_get_best_record_rate(NULL);

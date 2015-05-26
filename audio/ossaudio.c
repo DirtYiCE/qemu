@@ -510,7 +510,8 @@ static void oss_fini_out (HWVoiceOut *hw)
     }
 }
 
-static int oss_init_out (HWVoiceOut *hw, struct audsettings *as)
+static int oss_init_out(HWVoiceOut *hw, struct audsettings *as,
+                        void *drv_opaque)
 {
     OSSVoiceOut *oss = (OSSVoiceOut *) hw;
     struct oss_params req, obt;
@@ -519,6 +520,8 @@ static int oss_init_out (HWVoiceOut *hw, struct audsettings *as)
     int fd;
     audfmt_e effective_fmt;
     struct audsettings obt_as;
+
+    (void) drv_opaque;
 
     oss->fd = -1;
 
@@ -676,7 +679,7 @@ static int oss_ctl_out (HWVoiceOut *hw, int cmd, ...)
     return 0;
 }
 
-static int oss_init_in (HWVoiceIn *hw, struct audsettings *as)
+static int oss_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 {
     OSSVoiceIn *oss = (OSSVoiceIn *) hw;
     struct oss_params req, obt;
@@ -685,6 +688,8 @@ static int oss_init_in (HWVoiceIn *hw, struct audsettings *as)
     int fd;
     audfmt_e effective_fmt;
     struct audsettings obt_as;
+
+    (void) drv_opaque;
 
     oss->fd = -1;
 

@@ -534,13 +534,16 @@ fail:
     return NULL;
 }
 
-static int qpa_init_out (HWVoiceOut *hw, struct audsettings *as)
+static int qpa_init_out(HWVoiceOut *hw, struct audsettings *as,
+                        void *drv_opaque)
 {
     int error;
     static pa_sample_spec ss;
     static pa_buffer_attr ba;
     struct audsettings obt_as = *as;
     PAVoiceOut *pa = (PAVoiceOut *) hw;
+
+    (void) drv_opaque;
 
     ss.format = audfmt_to_pa (as->fmt, as->endianness);
     ss.channels = as->nchannels;
@@ -601,12 +604,14 @@ static int qpa_init_out (HWVoiceOut *hw, struct audsettings *as)
     return -1;
 }
 
-static int qpa_init_in (HWVoiceIn *hw, struct audsettings *as)
+static int qpa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 {
     int error;
     static pa_sample_spec ss;
     struct audsettings obt_as = *as;
     PAVoiceIn *pa = (PAVoiceIn *) hw;
+
+    (void) drv_opaque;
 
     ss.format = audfmt_to_pa (as->fmt, as->endianness);
     ss.channels = as->nchannels;
