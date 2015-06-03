@@ -1,0 +1,217 @@
+# -*- mode: python -*-
+
+##
+# @AudiodevNoneOptions
+#
+# The none, coreaudio, sdl and spice audio backend has no options.
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevNoneOptions',
+  'data': { } }
+
+##
+# @AudiodevAlsaPerDirectionOptions
+#
+# Options of the alsa backend that are used for both playback and recording.
+#
+# @dev: #optional the name of the alsa device to use
+#
+# @try-poll: #optional attempt to use poll mode
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevAlsaPerDirectionOptions',
+  'data': {
+    '*dev':      'str',
+    '*try-poll': 'bool' } }
+
+##
+# @AudiodevAlsaOptions
+#
+# Options of the alsa audio backend.
+#
+# @in: #optional options of the capture stream
+#
+# @out: #optional options of the playback stream
+#
+# @threshold: #optional set the threshold (in frames) when playback starts
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevAlsaOptions',
+  'data': {
+    'in':         'AudiodevAlsaPerDirectionOptions',
+    'out':        'AudiodevAlsaPerDirectionOptions',
+    '*threshold': 'int' } }
+
+##
+# @AudiodevDsoundOptions
+#
+# Options of the dsound audio backend.
+#
+# @latency-millis: #optional add extra latency to playback
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevDsoundOptions',
+  'data': {
+    '*latency-millis': 'int' } }
+
+##
+# @AudiodevOssPerDirectionOptions
+#
+# Options of the oss backend that are used for both playback and recording.
+#
+# @dev: #optional path of the oss device
+#
+# @try-poll: #optional attempt to use poll mode
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevOssPerDirectionOptions',
+  'data': {
+    '*dev':      'str',
+    '*try-poll': 'bool' } }
+
+##
+# @AudiodevOssOptions
+#
+# Options of the oss audio backend.
+#
+# @in: #optional options of the capture stream
+#
+# @out: #optional options of the playback stream
+#
+# @mmap: #optional try using memory mapped access
+#
+# @exclusive: #optional open device in exclusive mode (vmix wont work)
+#
+# @dsp-policy: #optional set the timing policy of the device, -1 to use fragment
+#              mode (option ignored on some platforms)
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevOssOptions',
+  'data': {
+    'in':          'AudiodevOssPerDirectionOptions',
+    'out':         'AudiodevOssPerDirectionOptions',
+    '*mmap':       'bool',
+    '*exclusive':  'bool',
+    '*dsp-policy': 'int' } }
+
+##
+# @AudiodevPaOptions
+#
+# Options of the pa (PulseAudio) audio backend.
+#
+# @server: #optional PulseAudio server address
+#
+# @sink: #optional sink device name
+#
+# @source: #optional source device name
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevPaOptions',
+  'data': {
+    '*server': 'str',
+    '*sink':   'str',
+    '*source': 'str' } }
+
+##
+# @AudiodevWavOptions
+#
+# Options of the wav audio backend.
+#
+# @path: #optional path of the wav file to record
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevWavOptions',
+  'data': {
+    '*path': 'str' } }
+
+
+##
+# @AudiodevBackendOptions
+#
+# A discriminated record of audio backends.
+#
+# Since: 2.4
+##
+{ 'union': 'AudiodevBackendOptions',
+  'data': {
+    'none':      'AudiodevNoneOptions',
+    'alsa':      'AudiodevAlsaOptions',
+    'coreaudio': 'AudiodevNoneOptions',
+    'dsound':    'AudiodevDsoundOptions',
+    'oss':       'AudiodevOssOptions',
+    'pa':        'AudiodevPaOptions',
+    'sdl':       'AudiodevNoneOptions',
+    'spice':     'AudiodevNoneOptions',
+    'wav':       'AudiodevWavOptions' } }
+
+##
+# @AudioFormat
+#
+# An enumeration of possible audio formats.
+#
+# Since: 2.4
+##
+{ 'enum': 'AudioFormat',
+  'data': [ 'u8', 's8', 'u16', 's16', 'u32', 's32' ] }
+
+##
+# @AudiodevPerDirectionOptions
+#
+# General audio backend options that are used for both playback and recording.
+#
+# @fixed-settings: #optional use fixed settings for host DAC/ADC
+#
+# @frequency: #optional frequency to use when using fixed settings
+#
+# @channels: #optional number of channels when using fixed settings
+#
+# @format: #optional sample fortmat to use when using fixed settings
+#
+# @buffer-usecs: #optional the buffer size in microseconds
+#
+# @buffer-count: #optional nuber of buffers
+#
+# Since: 2.4
+##
+{ 'struct': 'AudiodevPerDirectionOptions',
+  'data': {
+    '*fixed-settings': 'bool',
+    '*frequency':      'int',
+    '*channels':       'int',
+    '*voices':         'int',
+    '*format':         'AudioFormat',
+    '*buffer-usecs':   'int',
+    '*buffer-count':   'int' } }
+
+##
+# @Audiodev
+#
+# Captures the configuration of an audio backend.
+#
+# @id: identifier of the backend
+#
+# @in: #optional options of the capture stream
+#
+# @out: #optional options of the playback stream
+#
+# @timer-period: #optional timer period in HZ (0 - use lowest possible)
+#
+# @opts: audio backend specific options
+#
+# Since: 2.4
+##
+{ 'struct': 'Audiodev',
+  'data': {
+    '*id':           'str',
+    'in':            'AudiodevPerDirectionOptions',
+    'out':           'AudiodevPerDirectionOptions',
+    '*timer-period': 'int',
+    'opts':          'AudiodevBackendOptions' } }
