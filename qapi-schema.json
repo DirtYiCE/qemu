@@ -5,6 +5,9 @@
 # QAPI common definitions
 { 'include': 'qapi/common.json' }
 
+# QAPI audio definitions
+{ 'include': 'qapi/audio.json' }
+
 # QAPI block definitions
 { 'include': 'qapi/block.json' }
 
