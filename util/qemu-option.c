@@ -728,14 +728,16 @@ void qemu_opts_del(QemuOpts *opts)
     g_free(opts);
 }
 
-void qemu_opts_print(QemuOpts *opts, const char *sep)
+void qemu_opts_print(QemuOpts *opts, const char *d_sep)
 {
     QemuOpt *opt;
     QemuOptDesc *desc = opts->list->desc;
+    const char *sep = "";
 
     if (desc[0].name == NULL) {
         QTAILQ_FOREACH(opt, &opts->head, next) {
             printf("%s%s=\"%s\"", sep, opt->name, opt->str);
+            sep = d_sep;
         }
         return;
     }
@@ -755,6 +757,7 @@ void qemu_opts_print(QemuOpts *opts, const char *sep)
         } else {
             printf("%s%s=%s", sep, desc->name, value);
         }
+        sep = d_sep;
     }
 }
 
