@@ -4,3 +4,4 @@ util-obj-y += string-input-visitor.o string-output-visitor.o
 util-obj-y += opts-visitor.o
 util-obj-y += qmp-event.o
 util-obj-y += qapi-util.o
+util-obj-y += alloc-visitor.o
