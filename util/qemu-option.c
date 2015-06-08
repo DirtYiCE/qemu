@@ -728,14 +728,53 @@ void qemu_opts_del(QemuOpts *opts)
     g_free(opts);
 }
 
-void qemu_opts_print(QemuOpts *opts, const char *sep)
+/* print value properly escaping it for the shell (at least for bash) */
+static void escaped_print(const char *value)
+{
+    const char *ptr;
+    bool need_quote = false;
+
+    for (ptr = value; *ptr; ++ptr) {
+        if (!qemu_isalnum(*ptr)) {
+            need_quote = true;
+            break;
+        }
+    }
+
+    if (need_quote) {
+        putchar('\'');
+        for (ptr = value; *ptr; ++ptr) {
+            if (*ptr == '\'') {
+                printf("'\\''");
+            } else if (*ptr == ',') {
+                printf(",,");
+            } else {
+                putchar(*ptr);
+            }
+        }
+        putchar('\'');
+    } else {
+        printf("%s", value);
+    }
+}
+
+void qemu_opts_print(QemuOpts *opts, const char *separator)
 {
     QemuOpt *opt;
     QemuOptDesc *desc = opts->list->desc;
+    const char *sep = "";
+
+    if (opts->id) {
+        printf("id=");
+        escaped_print(opts->id);
+        sep = separator;
+    }
 
     if (desc[0].name == NULL) {
         QTAILQ_FOREACH(opt, &opts->head, next) {
-            printf("%s%s=\"%s\"", sep, opt->name, opt->str);
+            printf("%s%s=", sep, opt->name);
+            escaped_print(opt->str);
+            sep = separator;
         }
         return;
     }
@@ -748,13 +787,15 @@ void qemu_opts_print(QemuOpts *opts, const char *sep)
             continue;
         }
         if (desc->type == QEMU_OPT_STRING) {
-            printf("%s%s='%s'", sep, desc->name, value);
+            printf("%s%s=", sep, desc->name);
+            escaped_print(value);
         } else if ((desc->type == QEMU_OPT_SIZE ||
                     desc->type == QEMU_OPT_NUMBER) && opt) {
             printf("%s%s=%" PRId64, sep, desc->name, opt->value.uint);
         } else {
             printf("%s%s=%s", sep, desc->name, value);
         }
+        sep = separator;
     }
 }
 
