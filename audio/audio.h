@@ -29,15 +29,6 @@
 
 typedef void (*audio_callback_fn) (void *opaque, int avail);
 
-typedef enum {
-    AUD_FMT_U8,
-    AUD_FMT_S8,
-    AUD_FMT_U16,
-    AUD_FMT_S16,
-    AUD_FMT_U32,
-    AUD_FMT_S32
-} audfmt_e;
-
 #ifdef HOST_WORDS_BIGENDIAN
 #define AUDIO_HOST_ENDIANNESS 1
 #else
@@ -47,7 +38,7 @@ typedef enum {
 struct audsettings {
     int freq;
     int nchannels;
-    audfmt_e fmt;
+    AudioFormat fmt;
     int endianness;
 };
 
