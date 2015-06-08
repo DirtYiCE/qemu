@@ -2363,12 +2363,12 @@ static int protocol_client_msg(VncState *vs, uint8_t *data, size_t len)
                 if (len == 4)
                     return 10;
                 switch (read_u8(data, 4)) {
-                case 0: vs->as.fmt = AUD_FMT_U8; break;
-                case 1: vs->as.fmt = AUD_FMT_S8; break;
-                case 2: vs->as.fmt = AUD_FMT_U16; break;
-                case 3: vs->as.fmt = AUD_FMT_S16; break;
-                case 4: vs->as.fmt = AUD_FMT_U32; break;
-                case 5: vs->as.fmt = AUD_FMT_S32; break;
+                case 0: vs->as.fmt = AUDIO_FORMAT_U8; break;
+                case 1: vs->as.fmt = AUDIO_FORMAT_S8; break;
+                case 2: vs->as.fmt = AUDIO_FORMAT_U16; break;
+                case 3: vs->as.fmt = AUDIO_FORMAT_S16; break;
+                case 4: vs->as.fmt = AUDIO_FORMAT_U32; break;
+                case 5: vs->as.fmt = AUDIO_FORMAT_S32; break;
                 default:
                     VNC_DEBUG("Invalid audio format %d\n", read_u8(data, 4));
                     vnc_client_error(vs);
@@ -3069,7 +3069,7 @@ void vnc_init_state(VncState *vs)
 
     vs->as.freq = 44100;
     vs->as.nchannels = 2;
-    vs->as.fmt = AUD_FMT_S16;
+    vs->as.fmt = AUDIO_FORMAT_S16;
     vs->as.endianness = 0;
 
     qemu_mutex_init(&vs->output_mutex);
