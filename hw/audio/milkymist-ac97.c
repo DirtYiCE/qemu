@@ -297,7 +297,7 @@ static int milkymist_ac97_init(SysBusDevice *dev)
 
     as.freq = 48000;
     as.nchannels = 2;
-    as.fmt = AUD_FMT_S16;
+    as.fmt = AUDIO_FORMAT_S16;
     as.endianness = 1;
 
     s->voice_in = AUD_open_in(&s->card, s->voice_in,
