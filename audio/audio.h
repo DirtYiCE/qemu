@@ -25,6 +25,7 @@
 #define QEMU_AUDIO_H
 
 #include "config-host.h"
+#include "qemu-common.h"
 #include "qemu/queue.h"
 
 typedef void (*audio_callback_fn) (void *opaque, int avail);
@@ -35,12 +36,21 @@ typedef void (*audio_callback_fn) (void *opaque, int avail);
 #define AUDIO_HOST_ENDIANNESS 0
 #endif
 
-struct audsettings {
+typedef struct audsettings {
     int freq;
     int nchannels;
     AudioFormat fmt;
     int endianness;
-};
+} audsettings;
+
+audsettings audiodev_to_audsettings(AudiodevPerDirectionOptions *pdo);
+int audioformat_bytes_per_sample(AudioFormat fmt);
+int audio_buffer_frames(AudiodevPerDirectionOptions *pdo,
+                        audsettings *as, int def_usecs);
+int audio_buffer_samples(AudiodevPerDirectionOptions *pdo,
+                         audsettings *as, int def_usecs);
+int audio_buffer_bytes(AudiodevPerDirectionOptions *pdo,
+                       audsettings *as, int def_usecs);
 
 typedef enum {
     AUD_CNOTIFY_ENABLE,
@@ -77,10 +87,11 @@ typedef struct QEMUAudioTimeStamp {
     uint64_t old_ts;
 } QEMUAudioTimeStamp;
 
+extern QemuOptsList qemu_audiodev_opts;
+
 void AUD_vlog (const char *cap, const char *fmt, va_list ap) GCC_FMT_ATTR(2, 0);
 void AUD_log (const char *cap, const char *fmt, ...) GCC_FMT_ATTR(2, 3);
 
-void AUD_help (void);
 void AUD_register_card (const char *name, QEMUSoundCard *card);
 void AUD_remove_card (QEMUSoundCard *card);
 CaptureVoiceOut *AUD_add_capture (
@@ -153,5 +164,9 @@ static inline void *advance (void *p, int incr)
 
 int wav_start_capture (CaptureState *s, const char *path, int freq,
                        int bits, int nchannels);
+
+void audio_set_options(void);
+void audio_handle_legacy_opts(void);
+void audio_legacy_help(void);
 
 #endif  /* audio.h */
