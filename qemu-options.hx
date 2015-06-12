@@ -312,14 +312,226 @@ The default is @code{en-us}.
 ETEXI
 
 
+HXCOMM Deprecated by -audiodev
 DEF("audio-help", 0, QEMU_OPTION_audio_help,
-    "-audio-help     print list of audio drivers and their options\n",
+    "-audio-help     show -audiodev equivalent of the current audio settings\n",
     QEMU_ARCH_ALL)
 STEXI
 @item -audio-help
 @findex -audio-help
-Will show the audio subsystem help: list of drivers, tunable
-parameters.
+Will show the -audiodev equivalent of the currently specified
+(deprecated) environment variables.
+ETEXI
+
+DEF("audiodev", HAS_ARG, QEMU_OPTION_audiodev,
+    "-audiodev driver[,prop[=value][,...]]\n"
+    "                specifies the audio backend to use\n"
+    "                id= identifier of the backend\n"
+    "                timer-period= timer period in microseconds\n"
+    "                [in.|out.]fixed-settings= use fixed settings for host audio\n"
+    "                [in.|out.]frequency= frequency to use with fixed settings\n"
+    "                [in.|out.]channels= number of channels to use with fixed settings\n"
+    "                [in.|out.]format= sample format to use with fixed settings\n"
+    "                valid values: s8, s16, s32, u8, u16, u32\n"
+    "                [in.|out.]voices= number of voices to use\n"
+    "                [in.|out.]buffer= size of buffer in microseconds\n"
+    "                [in.|out.]buffer-count= number of buffers\n"
+    "-audiodev none[,prop[=value][,...]]\n"
+    "                dummy driver that discards all output\n"
+#ifdef CONFIG_ALSA
+    "-audiodev alsa[,prop[=value][,...]]\n"
+    "                [in.|out]dev= name of the audio device to use\n"
+    "                [in.|out]try-poll= attempt to use poll mode\n"
+    "                threshold= threshold (in frames) when playback starts\n"
+#endif
+#ifdef CONFIG_COREAUDIO
+    "-audiodev coreaudio[,prop[=value][,...]]\n"
+#endif
+#ifdef CONFIG_DSOUND
+    "-audiodev dsound[,prop[=value][,...]]\n"
+    "                latency= add extra latency to playback in microseconds\n"
+#endif
+#ifdef CONFIG_OSS
+    "-audiodev oss[,prop[=value][,...]]\n"
+    "                [in.|out]dev= path of the audio device to use\n"
+    "                [in.|out]try-poll= attempt to use poll mode\n"
+    "                mmap= try using memory mapped access\n"
+    "                exclusive= open device in exclusive mode\n"
+    "                dsp-policy= set timing policy, -1 to use fragment mode\n"
+#endif
+#ifdef CONFIG_PA
+    "-audiodev pa[,prop[=value][,...]]\n"
+    "                server= PulseAudio server address\n"
+    "                sink= sink device name\n"
+    "                source= source device name\n"
+#endif
+#ifdef CONFIG_SDL
+    "-audiodev sdl[,prop[=value][,...]]\n"
+#endif
+#ifdef CONFIG_SPICE
+    "-audiodev spice[,prop[=value][,...]]\n"
+#endif
+    "-audiodev wav[,prop[=value][,...]]\n"
+    "                path= path of wav file to record\n",
+    QEMU_ARCH_ALL)
+STEXI
+@item -audiodev @var{driver}[,@var{prop}[=@var{value}][,...]]
+@findex -audiodev
+Adds a new audio backend @var{driver}.  There are global and driver
+specific properties.  Some values can be set differently for input and
+output, they're marked with @code{[in.|out.]}.  To only set the input's
+option prefix the property with @code{in.}, to only set the output
+prefix it with @code{out.}, or leave them to specify both.  Thus the two
+examples are equal:
+@example
+-audiodev alsa,in.frequency=44110,out.frequency=44110
+-audiodev alsa,frequency=44100
+@end example
+
+Valid global options are:
+
+@table @option
+@item id=@var{identifier}
+Identifies the audio backend.
+
+@item timer-period=@var{period}
+Sets the timer @var{period} used by the audio subsystem in microseconds.
+
+@item [in.|out.]fixed-settings=on|off
+Use fixed settings for host audio.  When off, it will change based on
+how the guest opens the sound card.
+
+@item [in.|out.]frequency=@var{frequency}
+Specify the @var{frequency} to use when using @var{fixed-settings}.
+
+@item [in.|out.]channels=@var{channels}
+Specify the number of @var{channels} to use when using
+@var{fixed-settings}.
+
+@item [in.|out.]format=@var{format}
+Specify the sample @var{format} to use when using @var{fixed-settings}.
+Valid values are: @code{s8}, @code{s16}, @code{s32}, @code{u8},
+@code{u16}, @code{u32}.
+
+@item [in.|out.]voices=@var{voices}
+Specify the number of @var{voices} to use.
+
+@item [in.|out.]buffer=@var{usecs}
+Sets the size of the buffer in microseconds.
+
+@item [in.|out.]buffer-count=@var{count}
+Sets the @var{count} of the buffers.
+
+@end table
+
+@item -audiodev none[,@var{prop}[=@var{value}][,...]]
+Creates a dummy backend that discards all outputs.  This backend has no
+backend specific properties.
+
+@item -audiodev alsa[,@var{prop}[=@var{value}][,...]]
+Creates backend using the ALSA.  This backend is only available on
+Linux.
+
+ALSA specific options are:
+
+@table @option
+@item [in.|out.]dev=@var{device}
+Specify the ALSA @var{device} to use for input and/or output.
+
+@item [in.|out.]try-poll=on|of
+Attempt to use poll mode with the device.
+
+@item threshold=@var{threshold}
+Threshold (in frames) when playback starts.
+
+@end table
+
+@item -audiodev coreaudio[,@var{prop}[=@var{value}][,...]]
+Creates a backend using Apple's Core Audio.  This backend is only
+available on Mac OS and only supports playback.  This backend has no
+backend specific properties.
+
+@item -audiodev dsound[,@var{prop}[=@var{value}][,...]]
+Creates a backend using Microsoft's DirectSound.  This backend is only
+available on Windows and only supports playback.
+
+Backend specific options are:
+
+@table @option
+
+@item latency=@var{usecs}
+Add extra @var{usecs} microseconds latency to playback.
+
+@end table
+
+@item -audiodev oss[,@var{prop}[=@var{value}][,...]]
+Creates a backend using OSS.  This backend is available on most
+Unix-like systems.
+
+OSS specific options are:
+
+@table @option
+
+@item [in.|out.]dev=@var{path}
+Specify the @var{path} of the OSS device to use.
+
+@item [in.|out.]try-poll=on|of
+Attempt to use poll mode with the device.
+
+@item mmap=on|off
+Try using memory mapped device access.
+
+@item exclusive=on|off
+Open the device in exclusive mode (vmix won't work in this case).
+
+@item dsp-policy=@var{policy}
+Sets the timing policy (between 0 and 10).  Use -1 to use buffer sizes
+specified by @code{buffer} and @code{buffer-count}.  This option is
+ignored if you do not have OSS 4.
+
+@end table
+
+@item -audiodev pa[,@var{prop}[=@var{value}][,...]]
+Creates a backend using PulseAudio.  This backend is available on most
+systems.
+
+PulseAudio specific options are:
+
+@table @option
+
+@item server=@var{server}
+Sets the PulseAudio @var{server} to connect to.
+
+@item sink=@var{sink}
+Use the specified @var{sink} for playback.
+
+@item source=@var{source}
+Use the specified @var{source} for recording.
+
+@end table
+
+@item -audiodev sdl[,@var{prop}[=@var{value}][,...]]
+Creates a backend using SDL.  This backend is available on most systems,
+but you should use your platform's native backend if possible.  This
+backend has no backend specific properties.
+
+@item -audiodev spice[,@var{prop}[=@var{value}][,...]]
+Creates a backend that sends audio through SPICE.  This backend requires
+@code{-spice} and automatically selected in that case, so usually you
+can ignore this option.  This backend has no backend specific
+properties.
+
+@item -audiodev wav[,@var{prop}[=@var{value}][,...]]
+Creates a backend that writes audio to a WAV file.
+
+Backend specific options are:
+
+@table @option
+
+@item path=@var{path}
+Write recorded audio into the specified file.
+
+@end table
 ETEXI
 
 DEF("soundhw", HAS_ARG, QEMU_OPTION_soundhw,
