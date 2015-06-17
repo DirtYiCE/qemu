@@ -1193,7 +1193,7 @@ static void audio_add(VncState *vs)
     ops.destroy = audio_capture_destroy;
     ops.capture = audio_capture;
 
-    vs->audio_cap = AUD_add_capture(&vs->as, &ops, vs);
+    vs->audio_cap = AUD_add_capture(vs->vd->audio_state, &vs->as, &ops, vs);
     if (!vs->audio_cap) {
         error_report("Failed to add audio capture");
     }
@@ -3295,6 +3295,9 @@ static QemuOptsList qemu_vnc_opts = {
         },{
             .name = "non-adaptive",
             .type = QEMU_OPT_BOOL,
+        },{
+            .name = "audiodev",
+            .type = QEMU_OPT_STRING,
         },
         { /* end of list */ }
     },
@@ -3455,6 +3458,7 @@ void vnc_display_open(const char *id, Error **errp)
     int acl = 0;
 #endif
     int lock_key_sync = 1;
+    const char *audiodev;
 
     if (!vs) {
         error_setg(errp, "VNC display not active");
@@ -3636,6 +3640,15 @@ void vnc_display_open(const char *id, Error **errp)
     }
 #endif
     vs->lock_key_sync = lock_key_sync;
+
+    audiodev = qemu_opt_get(opts, "audiodev");
+    if (audiodev) {
+        vs->audio_state = audio_state_by_name(audiodev);
+        if (!vs->audio_state) {
+            error_setg(errp, "Audiodev '%s' not found", audiodev);
+            goto fail;
+        }
+    }
 
     device_id = qemu_opt_get(opts, "display");
     if (device_id) {
