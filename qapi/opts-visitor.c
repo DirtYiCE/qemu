@@ -149,6 +149,12 @@ opts_start_struct(Visitor *v, void **obj, const char *kind,
     }
 }
 
+static void
+opts_start_implicit_struct(Visitor *v, void **obj, size_t size, Error **errp)
+{
+    opts_start_struct(v, obj, NULL, NULL, size, errp);
+}
+
 
 static gboolean
 ghr_true(gpointer ign_key, gpointer ign_value, gpointer ign_user_data)
@@ -183,6 +189,12 @@ opts_end_struct(Visitor *v, Error **errp)
         g_free(ov->fake_id_opt);
     }
     ov->fake_id_opt = NULL;
+}
+
+static void
+opts_end_implicit_struct(Visitor *v, Error **errp)
+{
+    opts_end_struct(v, errp);
 }
 
 
@@ -507,6 +519,9 @@ opts_visitor_new(const QemuOpts *opts)
 
     ov->visitor.start_struct = &opts_start_struct;
     ov->visitor.end_struct   = &opts_end_struct;
+
+    ov->visitor.start_implicit_struct = &opts_start_implicit_struct;
+    ov->visitor.end_implicit_struct = &opts_end_implicit_struct;
 
     ov->visitor.start_list = &opts_start_list;
     ov->visitor.next_list  = &opts_next_list;
