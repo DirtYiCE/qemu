@@ -3004,6 +3004,7 @@ int main(int argc, char **argv, char **envp)
     qemu_add_opts(&qemu_trace_opts);
     qemu_add_opts(&qemu_option_rom_opts);
     qemu_add_opts(&qemu_machine_opts);
+    qemu_add_opts(&qemu_audiodev_opts);
     qemu_add_opts(&qemu_mem_opts);
     qemu_add_opts(&qemu_smp_opts);
     qemu_add_opts(&qemu_boot_opts);
@@ -3309,8 +3310,14 @@ int main(int argc, char **argv, char **envp)
                 add_device_config(DEV_BT, optarg);
                 break;
             case QEMU_OPTION_audio_help:
-                AUD_help ();
+                audio_legacy_help();
                 exit (0);
+                break;
+            case QEMU_OPTION_audiodev:
+                if (!qemu_opts_parse_noisily(qemu_find_opts("audiodev"),
+                                             optarg, true)) {
+                    exit(1);
+                }
                 break;
             case QEMU_OPTION_soundhw:
                 select_soundhw (optarg);
@@ -4511,6 +4518,7 @@ int main(int argc, char **argv, char **envp)
 
     realtime_init();
 
+    audio_set_options();
     audio_init();
 
     cpu_synchronize_all_post_init();
