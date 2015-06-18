@@ -1310,7 +1310,7 @@ static const MemoryRegionOps lan9118_16bit_mem_ops = {
 };
 
 static NetClientInfo net_lan9118_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NIC,
+    .type = NET_CLIENT_DRIVER_NIC,
     .size = sizeof(NICState),
     .can_receive = lan9118_can_receive,
     .receive = lan9118_receive,

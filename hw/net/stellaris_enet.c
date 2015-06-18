@@ -452,7 +452,7 @@ static void stellaris_enet_reset(stellaris_enet_state *s)
 }
 
 static NetClientInfo net_stellaris_enet_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NIC,
+    .type = NET_CLIENT_DRIVER_NIC,
     .size = sizeof(NICState),
     .can_receive = stellaris_enet_can_receive,
     .receive = stellaris_enet_receive,

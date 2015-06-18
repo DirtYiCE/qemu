@@ -30,7 +30,7 @@ typedef struct VhostUserChardevProps {
 VHostNetState *vhost_user_get_vhost_net(NetClientState *nc)
 {
     VhostUserState *s = DO_UPCAST(VhostUserState, nc, nc);
-    assert(nc->info->type == NET_CLIENT_OPTIONS_KIND_VHOST_USER);
+    assert(nc->info->type == NET_CLIENT_DRIVER_VHOST_USER);
     return s->vhost_net;
 }
 
@@ -76,20 +76,20 @@ static void vhost_user_cleanup(NetClientState *nc)
 
 static bool vhost_user_has_vnet_hdr(NetClientState *nc)
 {
-    assert(nc->info->type == NET_CLIENT_OPTIONS_KIND_VHOST_USER);
+    assert(nc->info->type == NET_CLIENT_DRIVER_VHOST_USER);
 
     return true;
 }
 
 static bool vhost_user_has_ufo(NetClientState *nc)
 {
-    assert(nc->info->type == NET_CLIENT_OPTIONS_KIND_VHOST_USER);
+    assert(nc->info->type == NET_CLIENT_DRIVER_VHOST_USER);
 
     return true;
 }
 
 static NetClientInfo net_vhost_user_info = {
-        .type = NET_CLIENT_OPTIONS_KIND_VHOST_USER,
+        .type = NET_CLIENT_DRIVER_VHOST_USER,
         .size = sizeof(VhostUserState),
         .cleanup = vhost_user_cleanup,
         .has_vnet_hdr = vhost_user_has_vnet_hdr,
@@ -228,15 +228,12 @@ static int net_vhost_check_net(void *opaque, QemuOpts *opts, Error **errp)
     return 0;
 }
 
-int net_init_vhost_user(const NetClientOptions *opts, const char *name,
+int net_init_vhost_user(const void *opts, const char *name,
                         NetClientState *peer, Error **errp)
 {
     uint32_t queues;
-    const NetdevVhostUserOptions *vhost_user_opts;
+    const NetdevVhostUserOptions *vhost_user_opts = opts;
     CharDriverState *chr;
-
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_VHOST_USER);
-    vhost_user_opts = opts->vhost_user;
 
     chr = net_vhost_parse_chardev(vhost_user_opts, errp);
     if (!chr) {

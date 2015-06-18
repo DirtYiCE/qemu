@@ -125,7 +125,7 @@ static void net_slirp_cleanup(NetClientState *nc)
 }
 
 static NetClientInfo net_slirp_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_USER,
+    .type = NET_CLIENT_DRIVER_USER,
     .size = sizeof(SlirpState),
     .receive = net_slirp_receive,
     .cleanup = net_slirp_cleanup,
@@ -735,18 +735,15 @@ static const char **slirp_dnssearch(const StringList *dnsname)
     return ret;
 }
 
-int net_init_slirp(const NetClientOptions *opts, const char *name,
+int net_init_slirp(const void *opts, const char *name,
                    NetClientState *peer, Error **errp)
 {
     /* FIXME error_setg(errp, ...) on failure */
     struct slirp_config_str *config;
     char *vnet;
     int ret;
-    const NetdevUserOptions *user;
+    const NetdevUserOptions *user = opts;
     const char **dnssearch;
-
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_USER);
-    user = opts->user;
 
     vnet = user->has_net ? g_strdup(user->net) :
            user->has_ip  ? g_strdup_printf("%s/24", user->ip) :

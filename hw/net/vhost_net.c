@@ -94,10 +94,10 @@ static const int *vhost_net_get_feature_bits(struct vhost_net *net)
     const int *feature_bits = 0;
 
     switch (net->nc->info->type) {
-    case NET_CLIENT_OPTIONS_KIND_TAP:
+    case NET_CLIENT_DRIVER_TAP:
         feature_bits = kernel_feature_bits;
         break;
-    case NET_CLIENT_OPTIONS_KIND_VHOST_USER:
+    case NET_CLIENT_DRIVER_VHOST_USER:
         feature_bits = user_feature_bits;
         break;
     default:
@@ -124,7 +124,7 @@ void vhost_net_ack_features(struct vhost_net *net, uint64_t features)
 static int vhost_net_get_fd(NetClientState *backend)
 {
     switch (backend->info->type) {
-    case NET_CLIENT_OPTIONS_KIND_TAP:
+    case NET_CLIENT_DRIVER_TAP:
         return tap_get_fd(backend);
     default:
         fprintf(stderr, "vhost-net requires tap backend\n");
@@ -220,7 +220,7 @@ static int vhost_net_start_one(struct vhost_net *net,
         net->nc->info->poll(net->nc, false);
     }
 
-    if (net->nc->info->type == NET_CLIENT_OPTIONS_KIND_TAP) {
+    if (net->nc->info->type == NET_CLIENT_DRIVER_TAP) {
         qemu_set_fd_handler(net->backend, NULL, NULL, NULL);
         file.fd = net->backend;
         for (file.index = 0; file.index < net->dev.nvqs; ++file.index) {
@@ -236,7 +236,7 @@ static int vhost_net_start_one(struct vhost_net *net,
     return 0;
 fail:
     file.fd = -1;
-    if (net->nc->info->type == NET_CLIENT_OPTIONS_KIND_TAP) {
+    if (net->nc->info->type == NET_CLIENT_DRIVER_TAP) {
         while (file.index-- > 0) {
             const VhostOps *vhost_ops = net->dev.vhost_ops;
             int r = vhost_ops->vhost_call(&net->dev, VHOST_NET_SET_BACKEND,
@@ -259,14 +259,14 @@ static void vhost_net_stop_one(struct vhost_net *net,
 {
     struct vhost_vring_file file = { .fd = -1 };
 
-    if (net->nc->info->type == NET_CLIENT_OPTIONS_KIND_TAP) {
+    if (net->nc->info->type == NET_CLIENT_DRIVER_TAP) {
         for (file.index = 0; file.index < net->dev.nvqs; ++file.index) {
             const VhostOps *vhost_ops = net->dev.vhost_ops;
             int r = vhost_ops->vhost_call(&net->dev, VHOST_NET_SET_BACKEND,
                                           &file);
             assert(r >= 0);
         }
-    } else if (net->nc->info->type == NET_CLIENT_OPTIONS_KIND_VHOST_USER) {
+    } else if (net->nc->info->type == NET_CLIENT_DRIVER_VHOST_USER) {
         for (file.index = 0; file.index < net->dev.nvqs; ++file.index) {
             const VhostOps *vhost_ops = net->dev.vhost_ops;
             int r = vhost_ops->vhost_call(&net->dev, VHOST_RESET_OWNER,
@@ -393,10 +393,10 @@ VHostNetState *get_vhost_net(NetClientState *nc)
     }
 
     switch (nc->info->type) {
-    case NET_CLIENT_OPTIONS_KIND_TAP:
+    case NET_CLIENT_DRIVER_TAP:
         vhost_net = tap_get_vhost_net(nc);
         break;
-    case NET_CLIENT_OPTIONS_KIND_VHOST_USER:
+    case NET_CLIENT_DRIVER_VHOST_USER:
         vhost_net = vhost_user_get_vhost_net(nc);
         break;
     default:

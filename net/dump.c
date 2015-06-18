@@ -94,7 +94,7 @@ static void dump_cleanup(NetClientState *nc)
 }
 
 static NetClientInfo net_dump_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_DUMP,
+    .type = NET_CLIENT_DRIVER_DUMP,
     .size = sizeof(DumpState),
     .receive = dump_receive,
     .cleanup = dump_cleanup,
@@ -146,16 +146,13 @@ static int net_dump_init(NetClientState *peer, const char *device,
     return 0;
 }
 
-int net_init_dump(const NetClientOptions *opts, const char *name,
+int net_init_dump(const void *opts, const char *name,
                   NetClientState *peer, Error **errp)
 {
     int len;
     const char *file;
     char def_file[128];
-    const NetdevDumpOptions *dump;
-
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_DUMP);
-    dump = opts->dump;
+    const NetdevDumpOptions *dump = opts;
 
     assert(peer);
 

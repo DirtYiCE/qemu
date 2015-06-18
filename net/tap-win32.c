@@ -713,7 +713,7 @@ static void tap_set_vnet_hdr_len(NetClientState *nc, int len)
 }
 
 static NetClientInfo net_tap_win32_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_TAP,
+    .type = NET_CLIENT_DRIVER_TAP,
     .size = sizeof(TAPState),
     .receive = tap_receive,
     .cleanup = tap_cleanup,
@@ -751,14 +751,11 @@ static int tap_win32_init(NetClientState *peer, const char *model,
     return 0;
 }
 
-int net_init_tap(const NetClientOptions *opts, const char *name,
+int net_init_tap(const void *opts, const char *name,
                  NetClientState *peer, Error **errp)
 {
     /* FIXME error_setg(errp, ...) on failure */
-    const NetdevTapOptions *tap;
-
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_TAP);
-    tap = opts->tap;
+    const NetdevTapOptions *tap = opts;
 
     if (!tap->has_ifname) {
         error_report("tap: no interface name");

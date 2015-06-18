@@ -2475,16 +2475,52 @@
     '*queues':        'uint32' } }
 
 ##
-# @NetClientOptions
+# @NetClientDriver
 #
-# A discriminated record of network device traits.
+# Possible netdev drivers.
+#
+# Since 2.4
+##
+{ 'enum': 'NetClientDriver',
+  'data': [ 'none', 'nic', 'user', 'tap', 'l2tpv3', 'socket', 'vde', 'dump',
+            'bridge', 'hubport', 'netmap', 'vhost-user' ] }
+
+##
+# @NetLegacyBase
+#
+# Captures the common configuration of a network device; legacy.
+#
+# @vlan: #optional vlan number
+#
+# @id: #optional identifier for monitor commands
+#
+# @name: #optional identifier for monitor commands, ignored if @id is present
+#
+# @opts: device type specific properties (legacy)
+#
+# @type: the netdev driver to use
+#
+# Since 2.4
+##
+{ 'struct': 'NetLegacyBase',
+  'data': {
+    '*vlan': 'int32',
+    '*id':   'str',
+    '*name': 'str',
+    'type': 'NetClientDriver' } }
+
+##
+# @NetLegacy
+#
+# Captures the configuration of a network device; legacy.
 #
 # Since 1.2
 #
 # 'l2tpv3' - since 2.1
-#
 ##
-{ 'union': 'NetClientOptions',
+{ 'union': 'NetLegacy',
+  'base': 'NetLegacyBase',
+  'discriminator': 'type',
   'data': {
     'none':     'NetdevNoneOptions',
     'nic':      'NetLegacyNicOptions',
@@ -2499,43 +2535,50 @@
     'netmap':   'NetdevNetmapOptions',
     'vhost-user': 'NetdevVhostUserOptions' } }
 
+
 ##
-# @NetLegacy
+# @NetdevBase
 #
-# Captures the configuration of a network device; legacy.
+# Captures the common configuration of a network device.
 #
-# @vlan: #optional vlan number
+# @id: identifier for monitor commands.
 #
-# @id: #optional identifier for monitor commands
+# @opts: device type specific properties
 #
-# @name: #optional identifier for monitor commands, ignored if @id is present
+# @type: the netdev driver to use
 #
-# @opts: device type specific properties (legacy)
-#
-# Since 1.2
+# Since 2.4
 ##
-{ 'struct': 'NetLegacy',
+{ 'struct': 'NetdevBase',
   'data': {
-    '*vlan': 'int32',
-    '*id':   'str',
-    '*name': 'str',
-    'opts':  'NetClientOptions' } }
+    'id':   'str',
+    'type': 'NetClientDriver' } }
 
 ##
 # @Netdev
 #
 # Captures the configuration of a network device.
 #
-# @id: identifier for monitor commands.
-#
-# @opts: device type specific properties
-#
 # Since 1.2
+#
+# 'l2tpv3' - since 2.1
 ##
-{ 'struct': 'Netdev',
+{ 'union': 'Netdev',
+  'base': 'NetdevBase',
+  'discriminator': 'type',
   'data': {
-    'id':   'str',
-    'opts': 'NetClientOptions' } }
+    'none':     'NetdevNoneOptions',
+    'nic':      'NetLegacyNicOptions',
+    'user':     'NetdevUserOptions',
+    'tap':      'NetdevTapOptions',
+    'l2tpv3':   'NetdevL2TPv3Options',
+    'socket':   'NetdevSocketOptions',
+    'vde':      'NetdevVdeOptions',
+    'dump':     'NetdevDumpOptions',
+    'bridge':   'NetdevBridgeOptions',
+    'hubport':  'NetdevHubPortOptions',
+    'netmap':   'NetdevNetmapOptions',
+    'vhost-user': 'NetdevVhostUserOptions' } }
 
 ##
 # @InetSocketAddress

@@ -130,7 +130,7 @@ static void net_hub_port_cleanup(NetClientState *nc)
 }
 
 static NetClientInfo net_hub_port_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_HUBPORT,
+    .type = NET_CLIENT_DRIVER_HUBPORT,
     .size = sizeof(NetHubPort),
     .can_receive = net_hub_port_can_receive,
     .receive = net_hub_port_receive,
@@ -265,10 +265,10 @@ int net_hub_id_for_client(NetClientState *nc, int *id)
 {
     NetHubPort *port;
 
-    if (nc->info->type == NET_CLIENT_OPTIONS_KIND_HUBPORT) {
+    if (nc->info->type == NET_CLIENT_DRIVER_HUBPORT) {
         port = DO_UPCAST(NetHubPort, nc, nc);
     } else if (nc->peer != NULL && nc->peer->info->type ==
-            NET_CLIENT_OPTIONS_KIND_HUBPORT) {
+            NET_CLIENT_DRIVER_HUBPORT) {
         port = DO_UPCAST(NetHubPort, nc, nc->peer);
     } else {
         return -ENOENT;
@@ -280,14 +280,12 @@ int net_hub_id_for_client(NetClientState *nc, int *id)
     return 0;
 }
 
-int net_init_hubport(const NetClientOptions *opts, const char *name,
+int net_init_hubport(const void *opts, const char *name,
                      NetClientState *peer, Error **errp)
 {
-    const NetdevHubPortOptions *hubport;
+    const NetdevHubPortOptions *hubport = opts;
 
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_HUBPORT);
     assert(!peer);
-    hubport = opts->hubport;
 
     net_hub_add_port(hubport->hubid, name);
     return 0;
@@ -314,14 +312,14 @@ void net_hub_check_clients(void)
             }
 
             switch (peer->info->type) {
-            case NET_CLIENT_OPTIONS_KIND_NIC:
+            case NET_CLIENT_DRIVER_NIC:
                 has_nic = 1;
                 break;
-            case NET_CLIENT_OPTIONS_KIND_USER:
-            case NET_CLIENT_OPTIONS_KIND_TAP:
-            case NET_CLIENT_OPTIONS_KIND_SOCKET:
-            case NET_CLIENT_OPTIONS_KIND_VDE:
-            case NET_CLIENT_OPTIONS_KIND_VHOST_USER:
+            case NET_CLIENT_DRIVER_USER:
+            case NET_CLIENT_DRIVER_TAP:
+            case NET_CLIENT_DRIVER_SOCKET:
+            case NET_CLIENT_DRIVER_VDE:
+            case NET_CLIENT_DRIVER_VHOST_USER:
                 has_host_dev = 1;
                 break;
             default:

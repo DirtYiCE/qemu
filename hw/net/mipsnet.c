@@ -212,7 +212,7 @@ static const VMStateDescription vmstate_mipsnet = {
 };
 
 static NetClientInfo net_mipsnet_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NIC,
+    .type = NET_CLIENT_DRIVER_NIC,
     .size = sizeof(NICState),
     .can_receive = mipsnet_can_receive,
     .receive = mipsnet_receive,

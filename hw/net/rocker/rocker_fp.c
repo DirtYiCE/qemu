@@ -163,7 +163,7 @@ static void fp_port_set_link_status(NetClientState *nc)
 }
 
 static NetClientInfo fp_port_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NIC,
+    .type = NET_CLIENT_DRIVER_NIC,
     .size = sizeof(NICState),
     .can_receive = fp_port_can_receive,
     .receive = fp_port_receive,

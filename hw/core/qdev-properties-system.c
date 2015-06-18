@@ -213,7 +213,7 @@ static void set_netdev(Object *obj, Visitor *v, void *opaque,
     }
 
     queues = qemu_find_net_clients_except(str, peers,
-                                          NET_CLIENT_OPTIONS_KIND_NIC,
+                                          NET_CLIENT_DRIVER_NIC,
                                           MAX_QUEUE_NUM);
     if (queues == 0) {
         err = -ENOENT;
