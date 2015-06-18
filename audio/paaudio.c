@@ -1,6 +1,7 @@
 /* public domain */
 #include "qemu-common.h"
 #include "audio.h"
+#include "qapi-visit.h"
 
 #include <pulse/pulseaudio.h>
 
@@ -9,14 +10,7 @@
 #include "audio_pt_int.h"
 
 typedef struct {
-    int samples;
-    char *server;
-    char *sink;
-    char *source;
-} PAConf;
-
-typedef struct {
-    PAConf conf;
+    Audiodev *dev;
     pa_threaded_mainloop *mainloop;
     pa_context *context;
 } paaudio;
@@ -31,6 +25,7 @@ typedef struct {
     void *pcm_buf;
     struct audio_pt pt;
     paaudio *g;
+    int samples;
 } PAVoiceOut;
 
 typedef struct {
@@ -45,6 +40,7 @@ typedef struct {
     const void *read_data;
     size_t read_index, read_length;
     paaudio *g;
+    int samples;
 } PAVoiceIn;
 
 static void qpa_audio_fini(void *opaque);
@@ -226,7 +222,7 @@ static void *qpa_thread_out (void *arg)
             }
         }
 
-        decr = to_mix = audio_MIN (pa->live, pa->g->conf.samples >> 2);
+        decr = to_mix = audio_MIN (pa->live, pa->samples >> 2);
         rpos = pa->rpos;
 
         if (audio_pt_unlock (&pa->pt, AUDIO_FUNC)) {
@@ -318,7 +314,7 @@ static void *qpa_thread_in (void *arg)
             }
         }
 
-        incr = to_grab = audio_MIN (pa->dead, pa->g->conf.samples >> 2);
+        incr = to_grab = audio_MIN (pa->dead, pa->samples >> 2);
         wpos = pa->wpos;
 
         if (audio_pt_unlock (&pa->pt, AUDIO_FUNC)) {
@@ -545,6 +541,7 @@ static int qpa_init_out(HWVoiceOut *hw, struct audsettings *as,
     struct audsettings obt_as = *as;
     PAVoiceOut *pa = (PAVoiceOut *) hw;
     paaudio *g = pa->g = drv_opaque;
+    AudiodevPaOptions *popts = g->dev->pa;
 
     ss.format = audfmt_to_pa (as->fmt, as->endianness);
     ss.channels = as->nchannels;
@@ -565,7 +562,7 @@ static int qpa_init_out(HWVoiceOut *hw, struct audsettings *as,
         g,
         "qemu",
         PA_STREAM_PLAYBACK,
-        g->conf.sink,
+        popts->has_sink ? popts->sink : NULL,
         &ss,
         NULL,                   /* channel map */
         &ba,                    /* buffering attributes */
@@ -577,7 +574,8 @@ static int qpa_init_out(HWVoiceOut *hw, struct audsettings *as,
     }
 
     audio_pcm_init_info (&hw->info, &obt_as);
-    hw->samples = g->conf.samples;
+    hw->samples = pa->samples = audio_buffer_samples(g->dev->out, &obt_as,
+                                                     46440);
     pa->pcm_buf = audio_calloc (AUDIO_FUNC, hw->samples, 1 << hw->info.shift);
     pa->rpos = hw->rpos;
     if (!pa->pcm_buf) {
@@ -611,6 +609,7 @@ static int qpa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
     struct audsettings obt_as = *as;
     PAVoiceIn *pa = (PAVoiceIn *) hw;
     paaudio *g = pa->g = drv_opaque;
+    AudiodevPaOptions *popts = g->dev->pa;
 
     ss.format = audfmt_to_pa (as->fmt, as->endianness);
     ss.channels = as->nchannels;
@@ -622,7 +621,7 @@ static int qpa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
         g,
         "qemu",
         PA_STREAM_RECORD,
-        g->conf.source,
+        popts->has_source ? popts->source : NULL,
         &ss,
         NULL,                   /* channel map */
         NULL,                   /* buffering attributes */
@@ -634,7 +633,8 @@ static int qpa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
     }
 
     audio_pcm_init_info (&hw->info, &obt_as);
-    hw->samples = g->conf.samples;
+    hw->samples = pa->samples = audio_buffer_samples(g->dev->in, &obt_as,
+                                                     46440);
     pa->pcm_buf = audio_calloc (AUDIO_FUNC, hw->samples, 1 << hw->info.shift);
     pa->wpos = hw->wpos;
     if (!pa->pcm_buf) {
@@ -808,14 +808,19 @@ static int qpa_ctl_in (HWVoiceIn *hw, int cmd, ...)
 }
 
 /* common */
-static PAConf glob_conf = {
-    .samples = 4096,
-};
-
-static void *qpa_audio_init (void)
+static void *qpa_audio_init(Audiodev *dev)
 {
-    paaudio *g = g_malloc(sizeof(paaudio));
-    g->conf = glob_conf;
+    paaudio *g;
+    AudiodevPaOptions *popts;
+    const char *server;
+
+    assert(dev->kind == AUDIODEV_DRIVER_PA);
+
+    g = g_malloc(sizeof(paaudio));
+    popts = dev->pa;
+    server = popts->has_server ? popts->server : NULL;
+
+    g->dev = dev;
     g->mainloop = NULL;
     g->context = NULL;
 
@@ -825,14 +830,14 @@ static void *qpa_audio_init (void)
     }
 
     g->context = pa_context_new (pa_threaded_mainloop_get_api (g->mainloop),
-                                 g->conf.server);
+                                 server);
     if (!g->context) {
         goto fail;
     }
 
     pa_context_set_state_callback (g->context, context_state_cb, g);
 
-    if (pa_context_connect (g->context, g->conf.server, 0, NULL) < 0) {
+    if (pa_context_connect (g->context, server, 0, NULL) < 0) {
         qpa_logerr (pa_context_errno (g->context),
                     "pa_context_connect() failed\n");
         goto fail;
@@ -895,34 +900,6 @@ static void qpa_audio_fini (void *opaque)
     g_free(g);
 }
 
-struct audio_option qpa_options[] = {
-    {
-        .name  = "SAMPLES",
-        .tag   = AUD_OPT_INT,
-        .valp  = &glob_conf.samples,
-        .descr = "buffer size in samples"
-    },
-    {
-        .name  = "SERVER",
-        .tag   = AUD_OPT_STR,
-        .valp  = &glob_conf.server,
-        .descr = "server address"
-    },
-    {
-        .name  = "SINK",
-        .tag   = AUD_OPT_STR,
-        .valp  = &glob_conf.sink,
-        .descr = "sink device name"
-    },
-    {
-        .name  = "SOURCE",
-        .tag   = AUD_OPT_STR,
-        .valp  = &glob_conf.source,
-        .descr = "source device name"
-    },
-    { /* End of list */ }
-};
-
 static struct audio_pcm_ops qpa_pcm_ops = {
     .init_out = qpa_init_out,
     .fini_out = qpa_fini_out,
@@ -940,7 +917,6 @@ static struct audio_pcm_ops qpa_pcm_ops = {
 struct audio_driver pa_audio_driver = {
     .name           = "pa",
     .descr          = "http://www.pulseaudio.org/",
-    .options        = qpa_options,
     .init           = qpa_audio_init,
     .fini           = qpa_audio_fini,
     .pcm_ops        = &qpa_pcm_ops,
