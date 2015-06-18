@@ -3536,17 +3536,6 @@
   'data': { '*console':'int', 'events': [ 'InputEvent' ] } }
 
 ##
-# @NumaOptions
-#
-# A discriminated record of NUMA options. (for OptsVisitor)
-#
-# Since 2.1
-##
-{ 'union': 'NumaOptions',
-  'data': {
-    'node': 'NumaNodeOptions' }}
-
-##
 # @NumaNodeOptions
 #
 # Create a guest NUMA node. (for OptsVisitor)
@@ -3571,6 +3560,42 @@
    '*cpus':   ['uint16'],
    '*mem':    'size',
    '*memdev': 'str' }}
+
+##
+# @NumaDriver
+#
+# List of possible numa drivers.
+#
+# Since: 2.5
+##
+{ 'enum': 'NumaDriver',
+  'data': [ 'node' ] }
+
+##
+# @NumaCommonOptions
+#
+# Common set of numa options.
+#
+# @type: the numa driver to use
+#
+# Since: 2.5
+##
+{ 'struct': 'NumaCommonOptions',
+  'data': {
+    'type': 'NumaDriver' } }
+
+##
+# @NumaOptions
+#
+# A discriminated record of NUMA options. (for OptsVisitor)
+#
+# Since 2.1
+##
+{ 'union': 'NumaOptions',
+  'base': 'NumaCommonOptions',
+  'discriminator': 'type',
+  'data': {
+    'node': 'NumaNodeOptions' }}
 
 ##
 # @HostMemPolicy
