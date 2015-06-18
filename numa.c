@@ -227,7 +227,7 @@ static int parse_numa(void *opaque, QemuOpts *opts, Error **errp)
     }
 
     switch (object->kind) {
-    case NUMA_OPTIONS_KIND_NODE:
+    case NUMA_DRIVER_NODE:
         numa_node_parse(object->node, opts, &err);
         if (err) {
             goto error;
