@@ -29,10 +29,9 @@ typedef struct OptsVisitor OptsVisitor;
  * - values below INT64_MIN or LLONG_MIN are rejected,
  * - values above INT64_MAX or LLONG_MAX are rejected.
  *
- * The Opts input visitor does not implement support for visiting QAPI
- * alternates, numbers (other than integers), null, or arbitrary
- * QTypes.  It also requires a non-null list argument to
- * visit_start_list().
+ * The Opts input visitor does not implement support for visiting numbers
+ * (other than integers), null, or arbitrary QTypes. It also requires a
+ * non-null list argument to visit_start_list().
  */
 Visitor *opts_visitor_new(const QemuOpts *opts);
 

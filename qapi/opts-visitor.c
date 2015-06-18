@@ -156,6 +156,13 @@ opts_start_struct(Visitor *v, const char *name, void **obj,
     }
 }
 
+static void
+opts_start_alternate(Visitor *v, const char *name, GenericAlternate **obj,
+                     size_t size, Error **errp)
+{
+    opts_start_struct(v, name, (void **)obj, size, errp);
+}
+
 
 static void
 opts_check_struct(Visitor *v, Error **errp)
@@ -196,6 +203,12 @@ opts_end_struct(Visitor *v, void **obj)
         g_free(ov->fake_id_opt);
     }
     ov->fake_id_opt = NULL;
+}
+
+static void
+opts_end_alternate(Visitor *v, void **obj)
+{
+    opts_end_struct(v, obj);
 }
 
 
@@ -546,6 +559,9 @@ opts_visitor_new(const QemuOpts *opts)
     ov->visitor.start_struct = &opts_start_struct;
     ov->visitor.check_struct = &opts_check_struct;
     ov->visitor.end_struct   = &opts_end_struct;
+
+    ov->visitor.start_alternate = &opts_start_alternate;
+    ov->visitor.end_alternate = &opts_end_alternate;
 
     ov->visitor.start_list = &opts_start_list;
     ov->visitor.next_list  = &opts_next_list;
