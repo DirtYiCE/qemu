@@ -435,11 +435,11 @@ static NetClientInfo net_netmap_info = {
  *
  * ... -net netmap,ifname="..."
  */
-int net_init_netmap(const NetClientOptions *opts,
+int net_init_netmap(const Netdev *netdev,
                     const char *name, NetClientState *peer, Error **errp)
 {
     /* FIXME error_setg(errp, ...) on failure */
-    const NetdevNetmapOptions *netmap_opts = opts->netmap;
+    const NetdevNetmapOptions *netmap_opts = netdev->opts->netmap;
     NetClientState *nc;
     NetmapPriv me;
     NetmapState *s;

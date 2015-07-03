@@ -813,15 +813,15 @@ int qemu_find_nic_model(NICInfo *nd, const char * const *models,
     return -1;
 }
 
-static int net_init_nic(const NetClientOptions *opts, const char *name,
+static int net_init_nic(const Netdev *netdev, const char *name,
                         NetClientState *peer, Error **errp)
 {
     int idx;
     NICInfo *nd;
     const NetLegacyNicOptions *nic;
 
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_NIC);
-    nic = opts->nic;
+    assert(netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_NIC);
+    nic = netdev->opts->nic;
 
     idx = nic_get_free_idx();
     if (idx == -1 || nb_nics >= MAX_NICS) {
@@ -882,7 +882,7 @@ static int net_init_nic(const NetClientOptions *opts, const char *name,
 
 
 static int (* const net_client_init_fun[NET_CLIENT_OPTIONS_KIND_MAX])(
-    const NetClientOptions *opts,
+    const Netdev *netdev,
     const char *name,
     NetClientState *peer, Error **errp) = {
         [NET_CLIENT_OPTIONS_KIND_NIC]       = net_init_nic,
@@ -913,7 +913,6 @@ static int (* const net_client_init_fun[NET_CLIENT_OPTIONS_KIND_MAX])(
 
 static int net_client_init1(const Netdev *netdev, int is_netdev, Error **errp)
 {
-    const NetClientOptions *opts = netdev->opts;
     const char *name;
     NetClientState *peer = NULL;
 
@@ -934,9 +933,9 @@ static int net_client_init1(const Netdev *netdev, int is_netdev, Error **errp)
             return -1;
         }
 
-        if (opts->kind == NET_CLIENT_OPTIONS_KIND_DUMP ||
-            opts->kind == NET_CLIENT_OPTIONS_KIND_NIC ||
-            !net_client_init_fun[opts->kind]) {
+        if (netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_DUMP ||
+            netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_NIC ||
+            !net_client_init_fun[netdev->opts->kind]) {
             error_setg(errp, QERR_INVALID_PARAMETER_VALUE, "type",
                        "a netdev backend type");
             return -1;
@@ -945,16 +944,16 @@ static int net_client_init1(const Netdev *netdev, int is_netdev, Error **errp)
         /* missing optional values have been initialized to "all bits zero" */
         name = netdev->has_id ? netdev->id : netdev->name;
 
-        if (opts->kind == NET_CLIENT_OPTIONS_KIND_NONE) {
+        if (netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_NONE) {
             return 0; /* nothing to do */
         }
-        if (opts->kind == NET_CLIENT_OPTIONS_KIND_HUBPORT) {
+        if (netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_HUBPORT) {
             error_setg(errp, QERR_INVALID_PARAMETER_VALUE, "type",
                        "a net type");
             return -1;
         }
 
-        if (!net_client_init_fun[opts->kind]) {
+        if (!net_client_init_fun[netdev->opts->kind]) {
             error_setg(errp, QERR_INVALID_PARAMETER_VALUE, "type",
                        "a net backend type (maybe it is not compiled "
                        "into this binary)");
@@ -962,17 +961,17 @@ static int net_client_init1(const Netdev *netdev, int is_netdev, Error **errp)
         }
 
         /* Do not add to a vlan if it's a nic with a netdev= parameter. */
-        if (opts->kind != NET_CLIENT_OPTIONS_KIND_NIC ||
-            !opts->nic->has_netdev) {
+        if (netdev->opts->kind != NET_CLIENT_OPTIONS_KIND_NIC ||
+            !netdev->opts->nic->has_netdev) {
             peer = net_hub_add_port(netdev->has_vlan ? netdev->vlan : 0, NULL);
         }
     }
 
-    if (net_client_init_fun[opts->kind](opts, name, peer, errp) < 0) {
+    if (net_client_init_fun[netdev->opts->kind](netdev, name, peer, errp) < 0) {
         /* FIXME drop when all init functions store an Error */
         if (errp && !*errp) {
             error_setg(errp, QERR_DEVICE_INIT_FAILED,
-                       NetClientOptionsKind_lookup[opts->kind]);
+                       NetClientOptionsKind_lookup[netdev->opts->kind]);
         }
         return -1;
     }

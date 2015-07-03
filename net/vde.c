@@ -109,14 +109,14 @@ static int net_vde_init(NetClientState *peer, const char *model,
     return 0;
 }
 
-int net_init_vde(const NetClientOptions *opts, const char *name,
+int net_init_vde(const Netdev *netdev, const char *name,
                  NetClientState *peer, Error **errp)
 {
     /* FIXME error_setg(errp, ...) on failure */
     const NetdevVdeOptions *vde;
 
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_VDE);
-    vde = opts->vde;
+    assert(netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_VDE);
+    vde = netdev->opts->vde;
 
     /* missing optional values have been initialized to "all bits zero" */
     if (net_vde_init(peer, "vde", name, vde->sock, vde->port, vde->group,
