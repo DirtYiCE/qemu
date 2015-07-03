@@ -146,7 +146,7 @@ static int net_dump_init(NetClientState *peer, const char *device,
     return 0;
 }
 
-int net_init_dump(const NetClientOptions *opts, const char *name,
+int net_init_dump(const Netdev *netdev, const char *name,
                   NetClientState *peer, Error **errp)
 {
     int len;
@@ -154,8 +154,8 @@ int net_init_dump(const NetClientOptions *opts, const char *name,
     char def_file[128];
     const NetdevDumpOptions *dump;
 
-    assert(opts->kind == NET_CLIENT_OPTIONS_KIND_DUMP);
-    dump = opts->dump;
+    assert(netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_DUMP);
+    dump = netdev->opts->dump;
 
     assert(peer);
 
