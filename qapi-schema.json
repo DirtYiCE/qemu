@@ -2485,6 +2485,29 @@
             'bridge', 'hubport', 'netmap', 'vhost-user' ] }
 
 ##
+# @NetdevBase
+#
+# Captures the commopn configuration of a network device.
+#
+# @vlan: #optional vlan number (legacy, forbidden with -netdev)
+#
+# @id: #optional identifier for monitor commands (required with -netdev)
+#
+# @name: #optional identifier for monitor commands, ignored if @id is present
+#        (legacy, forbidden with -netdev)
+#
+# @type: the netdev driver to use
+#
+# Since 2.5
+##
+{ 'struct': 'NetdevBase',
+  'data': {
+    '*vlan': 'int32',
+    '*id':   'str',
+    '*name': 'str',
+    'type':  'NetClientDriver' } }
+
+##
 # @Netdev
 #
 # Captures the configuration of a network device.
@@ -2512,29 +2535,6 @@
     'hubport':  'NetdevHubPortOptions',
     'netmap':   'NetdevNetmapOptions',
     'vhost-user': 'NetdevVhostUserOptions' } }
-
-##
-# @NetdevBase
-#
-# Captures the common configuration of a network device.
-#
-# @vlan: #optional vlan number (legacy, forbidden with -netdev)
-#
-# @id: #optional identifier for monitor commands (required with -netdev)
-#
-# @name: #optional identifier for monitor commands, ignored if @id is present
-#        (legacy, forbidden with -netdev)
-#
-# @type: the netdev driver to use
-#
-# Since 2.5
-##
-{ 'struct': 'NetdevBase',
-  'data': {
-    '*vlan': 'int32',
-    '*id':   'str',
-    '*name': 'str',
-    'type':  'NetClientDriver' } }
 
 ##
 # @InetSocketAddress
