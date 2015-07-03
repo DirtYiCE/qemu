@@ -417,7 +417,7 @@ static void netmap_set_offload(NetClientState *nc, int csum, int tso4, int tso6,
 
 /* NetClientInfo methods */
 static NetClientInfo net_netmap_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NETMAP,
+    .type = NET_CLIENT_DRIVER_NETMAP,
     .size = sizeof(NetmapState),
     .receive = netmap_receive,
     .receive_iov = netmap_receive_iov,
@@ -439,7 +439,7 @@ int net_init_netmap(const Netdev *netdev,
                     const char *name, NetClientState *peer, Error **errp)
 {
     /* FIXME error_setg(errp, ...) on failure */
-    const NetdevNetmapOptions *netmap_opts = netdev->opts->netmap;
+    const NetdevNetmapOptions *netmap_opts = netdev->netmap;
     NetClientState *nc;
     NetmapPriv me;
     NetmapState *s;

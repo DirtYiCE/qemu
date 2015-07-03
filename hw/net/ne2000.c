@@ -703,7 +703,7 @@ void ne2000_setup_io(NE2000State *s, DeviceState *dev, unsigned size)
 }
 
 static NetClientInfo net_ne2000_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NIC,
+    .type = NET_CLIENT_DRIVER_NIC,
     .size = sizeof(NICState),
     .can_receive = ne2000_can_receive,
     .receive = ne2000_receive,

@@ -406,7 +406,7 @@ static int peer_attach(VirtIONet *n, int index)
         return 0;
     }
 
-    if (nc->peer->info->type != NET_CLIENT_OPTIONS_KIND_TAP) {
+    if (nc->peer->info->type != NET_CLIENT_DRIVER_TAP) {
         return 0;
     }
 
@@ -421,7 +421,7 @@ static int peer_detach(VirtIONet *n, int index)
         return 0;
     }
 
-    if (nc->peer->info->type !=  NET_CLIENT_OPTIONS_KIND_TAP) {
+    if (nc->peer->info->type !=  NET_CLIENT_DRIVER_TAP) {
         return 0;
     }
 
@@ -1595,7 +1595,7 @@ static int virtio_net_load_device(VirtIODevice *vdev, QEMUFile *f,
 }
 
 static NetClientInfo net_virtio_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NIC,
+    .type = NET_CLIENT_DRIVER_NIC,
     .size = sizeof(NICState),
     .can_receive = virtio_net_can_receive,
     .receive = virtio_net_receive,

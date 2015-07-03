@@ -42,7 +42,7 @@ typedef struct ISANE2000State {
 } ISANE2000State;
 
 static NetClientInfo net_ne2000_isa_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_NIC,
+    .type = NET_CLIENT_DRIVER_NIC,
     .size = sizeof(NICState),
     .can_receive = ne2000_can_receive,
     .receive = ne2000_receive,
