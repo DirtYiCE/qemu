@@ -126,7 +126,7 @@ static void net_slirp_cleanup(NetClientState *nc)
 }
 
 static NetClientInfo net_slirp_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_USER,
+    .type = NET_CLIENT_DRIVER_USER,
     .size = sizeof(SlirpState),
     .receive = net_slirp_receive,
     .cleanup = net_slirp_cleanup,
@@ -746,8 +746,8 @@ int net_init_slirp(const Netdev *netdev, const char *name,
     const NetdevUserOptions *user;
     const char **dnssearch;
 
-    assert(netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_USER);
-    user = netdev->opts->user;
+    assert(netdev->kind == NET_CLIENT_DRIVER_USER);
+    user = netdev->user;
 
     vnet = user->has_net ? g_strdup(user->net) :
            user->has_ip  ? g_strdup_printf("%s/24", user->ip) :

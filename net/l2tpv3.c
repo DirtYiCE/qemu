@@ -516,7 +516,7 @@ static void net_l2tpv3_cleanup(NetClientState *nc)
 }
 
 static NetClientInfo net_l2tpv3_info = {
-    .type = NET_CLIENT_OPTIONS_KIND_L2TPV3,
+    .type = NET_CLIENT_DRIVER_L2TPV3,
     .size = sizeof(NetL2TPV3State),
     .receive = net_l2tpv3_receive_dgram,
     .receive_iov = net_l2tpv3_receive_dgram_iov,
@@ -545,8 +545,8 @@ int net_init_l2tpv3(const Netdev *netdev,
     s->queue_tail = 0;
     s->header_mismatch = false;
 
-    assert(netdev->opts->kind == NET_CLIENT_OPTIONS_KIND_L2TPV3);
-    l2tpv3 = netdev->opts->l2tpv3;
+    assert(netdev->kind == NET_CLIENT_DRIVER_L2TPV3);
+    l2tpv3 = netdev->l2tpv3;
 
     if (l2tpv3->has_ipv6 && l2tpv3->ipv6) {
         s->ipv6 = l2tpv3->ipv6;
