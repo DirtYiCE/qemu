@@ -911,16 +911,28 @@ static int (* const net_client_init_fun[NET_CLIENT_OPTIONS_KIND_MAX])(
 };
 
 
-static int net_client_init1(const void *object, int is_netdev, Error **errp)
+static int net_client_init1(const Netdev *netdev, int is_netdev, Error **errp)
 {
-    const NetClientOptions *opts;
+    const NetClientOptions *opts = netdev->opts;
     const char *name;
     NetClientState *peer = NULL;
 
     if (is_netdev) {
-        const Netdev *netdev = object;
-        opts = netdev->opts;
         name = netdev->id;
+
+        /* validate -netdev option: has id, no vlan or name */
+        if (!netdev->has_id) {
+            error_setg(errp, QERR_MISSING_PARAMETER, "id");
+            return -1;
+        }
+        if (netdev->has_name) {
+            error_setg(errp, QERR_INVALID_PARAMETER, "name");
+            return -1;
+        }
+        if (netdev->has_vlan) {
+            error_setg(errp, QERR_INVALID_PARAMETER, "vlan");
+            return -1;
+        }
 
         if (opts->kind == NET_CLIENT_OPTIONS_KIND_DUMP ||
             opts->kind == NET_CLIENT_OPTIONS_KIND_NIC ||
@@ -930,10 +942,8 @@ static int net_client_init1(const void *object, int is_netdev, Error **errp)
             return -1;
         }
     } else {
-        const NetLegacy *net = object;
-        opts = net->opts;
         /* missing optional values have been initialized to "all bits zero" */
-        name = net->has_id ? net->id : net->name;
+        name = netdev->has_id ? netdev->id : netdev->name;
 
         if (opts->kind == NET_CLIENT_OPTIONS_KIND_NONE) {
             return 0; /* nothing to do */
@@ -954,7 +964,7 @@ static int net_client_init1(const void *object, int is_netdev, Error **errp)
         /* Do not add to a vlan if it's a nic with a netdev= parameter. */
         if (opts->kind != NET_CLIENT_OPTIONS_KIND_NIC ||
             !opts->nic->has_netdev) {
-            peer = net_hub_add_port(net->has_vlan ? net->vlan : 0, NULL);
+            peer = net_hub_add_port(netdev->has_vlan ? netdev->vlan : 0, NULL);
         }
     }
 
@@ -970,26 +980,16 @@ static int net_client_init1(const void *object, int is_netdev, Error **errp)
 }
 
 
-static void net_visit(Visitor *v, int is_netdev, void **object, Error **errp)
-{
-    if (is_netdev) {
-        visit_type_Netdev(v, (Netdev **)object, NULL, errp);
-    } else {
-        visit_type_NetLegacy(v, (NetLegacy **)object, NULL, errp);
-    }
-}
-
-
 int net_client_init(QemuOpts *opts, int is_netdev, Error **errp)
 {
-    void *object = NULL;
+    Netdev *object = NULL;
     Error *err = NULL;
     int ret = -1;
 
     {
         OptsVisitor *ov = opts_visitor_new(opts);
 
-        net_visit(opts_get_visitor(ov), is_netdev, &object, &err);
+        visit_type_Netdev(opts_get_visitor(ov), &object, NULL, &err);
         opts_visitor_cleanup(ov);
     }
 
@@ -1000,7 +1000,7 @@ int net_client_init(QemuOpts *opts, int is_netdev, Error **errp)
     if (object) {
         QapiDeallocVisitor *dv = qapi_dealloc_visitor_new();
 
-        net_visit(qapi_dealloc_get_visitor(dv), is_netdev, &object, NULL);
+        visit_type_Netdev(qapi_dealloc_get_visitor(dv), &object, NULL, NULL);
         qapi_dealloc_visitor_cleanup(dv);
     }
 
