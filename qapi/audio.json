@@ -184,6 +184,10 @@
 #
 # General audio backend options that are used for both playback and recording.
 #
+# @mixeng: #optional use QEMU's mixing engine to mix all streams inside QEMU.
+#          When set to off, fixed-settings must be also off.  Not every backend
+#          compatible with the off setting (default on)
+#
 # @fixed-settings: #optional use fixed settings for host input/output.  When
 #                  off, frequency, channels and format must not be specified
 #                  (default on)
@@ -207,6 +211,7 @@
 ##
 { 'struct': 'AudiodevPerDirectionOptions',
   'data': {
+    '*mixeng':         'bool',
     '*fixed-settings': 'bool',
     '*frequency':      'int',
     '*channels':       'int',
