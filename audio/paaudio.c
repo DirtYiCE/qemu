@@ -233,7 +233,7 @@ static void *qpa_thread_out (void *arg)
             }
         }
 
-        decr = to_mix = audio_MIN (pa->live, pa->samples >> 2);
+        decr = to_mix = MIN (pa->live, pa->samples >> 2);
         rpos = pa->rpos;
 
         if (audio_pt_unlock (&pa->pt, AUDIO_FUNC)) {
@@ -242,7 +242,7 @@ static void *qpa_thread_out (void *arg)
 
         while (to_mix) {
             int error;
-            int chunk = audio_MIN (to_mix, hw->samples - rpos);
+            int chunk = MIN (to_mix, hw->samples - rpos);
             struct st_sample *src = hw->mix_buf + rpos;
 
             hw->clip (pa->pcm_buf, src, chunk);
@@ -280,7 +280,7 @@ static int qpa_run_out (HWVoiceOut *hw, int live)
         return 0;
     }
 
-    decr = audio_MIN (live, pa->decr);
+    decr = MIN (live, pa->decr);
     pa->decr -= decr;
     pa->live = live - decr;
     hw->rpos = pa->rpos;
@@ -325,7 +325,7 @@ static void *qpa_thread_in (void *arg)
             }
         }
 
-        incr = to_grab = audio_MIN (pa->dead, pa->samples >> 2);
+        incr = to_grab = MIN (pa->dead, pa->samples >> 2);
         wpos = pa->wpos;
 
         if (audio_pt_unlock (&pa->pt, AUDIO_FUNC)) {
@@ -334,7 +334,7 @@ static void *qpa_thread_in (void *arg)
 
         while (to_grab) {
             int error;
-            int chunk = audio_MIN (to_grab, hw->samples - wpos);
+            int chunk = MIN (to_grab, hw->samples - wpos);
             void *buf = advance (pa->pcm_buf, wpos);
 
             if (qpa_simple_read (pa, buf,
@@ -373,7 +373,7 @@ static int qpa_run_in (HWVoiceIn *hw)
 
     live = audio_pcm_hw_get_live_in (hw);
     dead = hw->samples - live;
-    incr = audio_MIN (dead, pa->incr);
+    incr = MIN (dead, pa->incr);
     pa->incr -= incr;
     pa->dead = dead - incr;
     hw->wpos = pa->wpos;
