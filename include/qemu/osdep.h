@@ -233,10 +233,18 @@ extern int daemon(int, int);
 #endif
 
 #ifndef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MIN(a, b) ( __extension__ ({      \
+    __auto_type _a = (a);                 \
+    __auto_type _b = (b);                 \
+    _a > _b ? _b : _a;                    \
+}))
 #endif
 #ifndef MAX
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MAX(a, b) ( __extension__ ({      \
+    __auto_type _a = (a);                 \
+    __auto_type _b = (b);                 \
+    _a < _b ? _b : _a;                    \
+}))
 #endif
 
 /* Minimum function that returns zero only iff both values are zero.
