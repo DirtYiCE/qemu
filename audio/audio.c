@@ -790,8 +790,9 @@ static void audio_reset_timer (AudioState *s)
 
 static void audio_timer (void *opaque)
 {
-    audio_run ("timer");
-    audio_reset_timer (opaque);
+    AudioState *s = opaque;
+    audio_run(s, "timer");
+    audio_reset_timer(s);
 }
 
 /*
@@ -1194,15 +1195,11 @@ static void audio_run_capture (AudioState *s)
     }
 }
 
-void audio_run (const char *msg)
+void audio_run(AudioState *s, const char *msg)
 {
-    AudioState *s;
-
-    QTAILQ_FOREACH(s, &audio_states, list) {
-        audio_run_out (s);
-        audio_run_in (s);
-        audio_run_capture (s);
-    }
+    audio_run_out(s);
+    audio_run_in(s);
+    audio_run_capture(s);
 
 #ifdef DEBUG_POLL
     {
