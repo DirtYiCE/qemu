@@ -205,7 +205,6 @@ block_drv_ro_whitelist=""
 host_cc="cc"
 libs_softmmu=""
 libs_tools=""
-audio_pt_int=""
 audio_win_int=""
 cc_i386=i386-pc-linux-gnu-gcc
 libs_qga=""
@@ -2643,7 +2642,6 @@ for drv in $audio_drv_list; do
     audio_drv_probe $drv pulse/mainloop.h "-lpulse" \
         "pa_mainloop *m = 0; pa_mainloop_free (m); return 0;"
     libs_softmmu="-lpulse $libs_softmmu"
-    audio_pt_int="yes"
     ;;
 
     coreaudio)
@@ -4713,9 +4711,6 @@ for drv in $audio_drv_list; do
     def=CONFIG_`echo $drv | LC_ALL=C tr '[a-z]' '[A-Z]'`
     echo "$def=y" >> $config_host_mak
 done
-if test "$audio_pt_int" = "yes" ; then
-  echo "CONFIG_AUDIO_PT_INT=y" >> $config_host_mak
-fi
 if test "$audio_win_int" = "yes" ; then
   echo "CONFIG_AUDIO_WIN_INT=y" >> $config_host_mak
 fi

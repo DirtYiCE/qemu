@@ -71,20 +71,22 @@ static void glue(audio_init_nb_voices_, TYPE)(AudioState *s,
 
 static void glue (audio_pcm_hw_free_resources_, TYPE) (HW *hw)
 {
+    g_free(hw->buf_emul);
     g_free (HWBUF);
     HWBUF = NULL;
 }
 
-static int glue (audio_pcm_hw_alloc_resources_, TYPE) (HW *hw)
+static void glue(audio_pcm_hw_alloc_resources_, TYPE)(HW *hw)
 {
-    HWBUF = audio_calloc (AUDIO_FUNC, hw->samples, sizeof (struct st_sample));
-    if (!HWBUF) {
-        dolog ("Could not allocate " NAME " buffer (%d samples)\n",
-               hw->samples);
-        return -1;
+    size_t samples;
+    if (hw->pcm_ops->glue(buffer_size_, TYPE)) {
+        samples = hw->pcm_ops->glue(buffer_size_, TYPE)(hw);
+    } else {
+        samples = 1024; /* todo better default */
     }
 
-    return 0;
+    HWBUF = g_malloc0(sizeof(STSampleBuffer) + sizeof(st_sample)*samples);
+    HWBUF->size = samples;
 }
 
 static void glue (audio_pcm_sw_free_resources_, TYPE) (SW *sw)
@@ -103,7 +105,7 @@ static int glue (audio_pcm_sw_alloc_resources_, TYPE) (SW *sw)
 {
     int samples;
 
-    samples = ((int64_t) sw->hw->samples << 32) / sw->ratio;
+    samples = ((int64_t) sw->HWBUF->size << 32) / sw->ratio;
 
     sw->buf = audio_calloc (AUDIO_FUNC, samples, sizeof (struct st_sample));
     if (!sw->buf) {
@@ -264,11 +266,6 @@ static HW *glue(audio_pcm_hw_add_new_, TYPE)(AudioState *s,
         goto err0;
     }
 
-    if (audio_bug (AUDIO_FUNC, hw->samples <= 0)) {
-        dolog ("hw->samples=%d\n", hw->samples);
-        goto err1;
-    }
-
 #ifdef DAC
     hw->clip = mixeng_clip
 #else
@@ -279,9 +276,7 @@ static HW *glue(audio_pcm_hw_add_new_, TYPE)(AudioState *s,
         [hw->info.swap_endianness]
         [audio_bits_to_index (hw->info.bits)];
 
-    if (glue (audio_pcm_hw_alloc_resources_, TYPE) (hw)) {
-        goto err1;
-    }
+    glue(audio_pcm_hw_alloc_resources_, TYPE)(hw);
 
     QLIST_INSERT_HEAD (&s->glue (hw_head_, TYPE), hw, entries);
     glue (s->nb_hw_voices_, TYPE) -= 1;
@@ -290,9 +285,7 @@ static HW *glue(audio_pcm_hw_add_new_, TYPE)(AudioState *s,
 #endif
     return hw;
 
- err1:
-    glue (hw->pcm_ops->fini_, TYPE) (hw);
- err0:
+err0:
     g_free (hw);
     return NULL;
 }
