@@ -78,26 +78,32 @@ static void glue (audio_pcm_hw_free_resources_, TYPE) (HW *hw)
 
 static void glue(audio_pcm_hw_alloc_resources_, TYPE)(HW *hw)
 {
-    size_t samples;
-    if (!hw->pcm_ops) {
-        /*
-         * We should only end up here when using wavcapture hmp command (and not
-         * the wavcapture audio backend).
-         * It needs a lot of samples, otherwise you'll end up with "Could not
-         * mix X bytes into a capture buffer" warnings and a garbled capture.
-         */
-        samples = 4096 * 4;
-    } else if (hw->pcm_ops->glue(buffer_size_, TYPE)) {
-        samples = hw->pcm_ops->glue(buffer_size_, TYPE)(hw);
-    } else {
-        samples = 1024; /* todo better default */
-    }
-    if (audio_bug(__func__, samples == 0)) {
-        dolog("Attempted to allocate empty buffer\n");
-    }
+    if (hw->s->dev->TYPE->mixeng) {
+        size_t samples;
+        if (!hw->pcm_ops) {
+            /*
+             * We should only end up here when using wavcapture hmp command (and
+             * not the wavcapture audio backend).
+             * It needs a lot of samples, otherwise you'll end up with "Could
+             * not mix X bytes into a capture buffer" warnings and a garbled
+             * capture.
+             */
+            samples = 4096 * 4;
+        } else if (hw->pcm_ops->glue(buffer_size_, TYPE)) {
+            samples = hw->pcm_ops->glue(buffer_size_, TYPE)(hw);
+        } else {
+            samples = 1024; /* todo better default */
+        }
 
-    HWBUF = g_malloc0(sizeof(STSampleBuffer) + sizeof(st_sample) * samples);
-    HWBUF->size = samples;
+        if (audio_bug(__func__, samples == 0)) {
+            dolog("Attempted to allocate empty buffer\n");
+        }
+
+        HWBUF = g_malloc0(sizeof(STSampleBuffer) + sizeof(st_sample) * samples);
+        HWBUF->size = samples;
+    } else {
+        HWBUF = NULL;
+    }
 }
 
 static void glue (audio_pcm_sw_free_resources_, TYPE) (SW *sw)
@@ -115,6 +121,10 @@ static void glue (audio_pcm_sw_free_resources_, TYPE) (SW *sw)
 static int glue (audio_pcm_sw_alloc_resources_, TYPE) (SW *sw)
 {
     int samples;
+
+    if (!sw->s->dev->TYPE->mixeng) {
+        return 0;
+    }
 
     samples = ((int64_t) sw->HWBUF->size << 32) / sw->ratio;
 
