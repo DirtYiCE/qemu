@@ -533,7 +533,7 @@ static void qpa_fini_in (HWVoiceIn *hw)
     }
 }
 
-static int qpa_ctl_out (HWVoiceOut *hw, int cmd, ...)
+static void qpa_volume_out(HWVoiceOut *hw, struct mixeng_volume *vol)
 {
     PAVoiceOut *pa = (PAVoiceOut *) hw;
     pa_operation *op;
@@ -544,48 +544,36 @@ static int qpa_ctl_out (HWVoiceOut *hw, int cmd, ...)
     pa_cvolume_init (&v);  /* function is present in 0.9.13+ */
 #endif
 
-    switch (cmd) {
-    case VOICE_VOLUME:
-        {
-            SWVoiceOut *sw;
-            va_list ap;
+    v.channels = 2;
+    v.values[0] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * vol->l) / UINT32_MAX;
+    v.values[1] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * vol->r) / UINT32_MAX;
 
-            va_start (ap, cmd);
-            sw = va_arg (ap, SWVoiceOut *);
-            va_end (ap);
+    pa_threaded_mainloop_lock(c->mainloop);
 
-            v.channels = 2;
-            v.values[0] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * sw->vol.l) / UINT32_MAX;
-            v.values[1] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * sw->vol.r) / UINT32_MAX;
-
-            pa_threaded_mainloop_lock(c->mainloop);
-
-            op = pa_context_set_sink_input_volume(c->context,
-                pa_stream_get_index (pa->stream),
-                &v, NULL, NULL);
-            if (!op)
-                qpa_logerr (pa_context_errno(c->context),
-                            "set_sink_input_volume() failed\n");
-            else
-                pa_operation_unref (op);
-
-            op = pa_context_set_sink_input_mute(c->context,
-                pa_stream_get_index (pa->stream),
-               sw->vol.mute, NULL, NULL);
-            if (!op) {
-                qpa_logerr (pa_context_errno(c->context),
-                            "set_sink_input_mute() failed\n");
-            } else {
-                pa_operation_unref (op);
-            }
-
-            pa_threaded_mainloop_unlock(c->mainloop);
-        }
+    op = pa_context_set_sink_input_volume(c->context,
+                                          pa_stream_get_index(pa->stream),
+                                          &v, NULL, NULL);
+    if (!op) {
+        qpa_logerr(pa_context_errno(c->context),
+                   "set_sink_input_volume() failed\n");
+    } else {
+        pa_operation_unref (op);
     }
-    return 0;
+
+    op = pa_context_set_sink_input_mute(c->context,
+                                        pa_stream_get_index (pa->stream),
+                                        vol->mute, NULL, NULL);
+    if (!op) {
+        qpa_logerr (pa_context_errno(c->context),
+                    "set_sink_input_mute() failed\n");
+    } else {
+        pa_operation_unref (op);
+    }
+
+    pa_threaded_mainloop_unlock(c->mainloop);
 }
 
-static int qpa_ctl_in (HWVoiceIn *hw, int cmd, ...)
+static void qpa_volume_in(HWVoiceIn *hw, struct mixeng_volume *vol)
 {
     PAVoiceIn *pa = (PAVoiceIn *) hw;
     pa_operation *op;
@@ -596,47 +584,34 @@ static int qpa_ctl_in (HWVoiceIn *hw, int cmd, ...)
     pa_cvolume_init (&v);
 #endif
 
-    switch (cmd) {
-    case VOICE_VOLUME:
-        {
-            SWVoiceIn *sw;
-            va_list ap;
+    v.channels = 2;
+    v.values[0] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * vol->l) / UINT32_MAX;
+    v.values[1] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * vol->r) / UINT32_MAX;
 
-            va_start (ap, cmd);
-            sw = va_arg (ap, SWVoiceIn *);
-            va_end (ap);
+    pa_threaded_mainloop_lock(c->mainloop);
 
-            v.channels = 2;
-            v.values[0] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * sw->vol.l) / UINT32_MAX;
-            v.values[1] = ((PA_VOLUME_NORM - PA_VOLUME_MUTED) * sw->vol.r) / UINT32_MAX;
-
-            pa_threaded_mainloop_lock(c->mainloop);
-
-            /* FIXME: use the upcoming "set_source_output_{volume,mute}" */
-            op = pa_context_set_source_volume_by_index(c->context,
-                pa_stream_get_device_index (pa->stream),
-                &v, NULL, NULL);
-            if (!op) {
-                qpa_logerr (pa_context_errno(c->context),
-                            "set_source_volume() failed\n");
-            } else {
-                pa_operation_unref(op);
-            }
-
-            op = pa_context_set_source_mute_by_index(c->context,
-                pa_stream_get_index (pa->stream),
-                sw->vol.mute, NULL, NULL);
-            if (!op) {
-                qpa_logerr (pa_context_errno(c->context),
-                            "set_source_mute() failed\n");
-            } else {
-                pa_operation_unref (op);
-            }
-
-            pa_threaded_mainloop_unlock(c->mainloop);
-        }
+    /* FIXME: use the upcoming "set_source_output_{volume,mute}" */
+    op = pa_context_set_source_volume_by_index(c->context,
+                                               pa_stream_get_device_index(pa->stream),
+                                               &v, NULL, NULL);
+    if (!op) {
+        qpa_logerr(pa_context_errno(c->context),
+                   "set_source_volume() failed\n");
+    } else {
+        pa_operation_unref(op);
     }
-    return 0;
+
+    op = pa_context_set_source_mute_by_index(c->context,
+                                             pa_stream_get_index(pa->stream),
+                                             vol->mute, NULL, NULL);
+    if (!op) {
+        qpa_logerr(pa_context_errno(c->context),
+                   "set_source_mute() failed\n");
+    } else {
+        pa_operation_unref(op);
+    }
+
+    pa_threaded_mainloop_unlock(c->mainloop);
 }
 
 /* common */
@@ -773,7 +748,7 @@ static struct audio_pcm_ops qpa_pcm_ops = {
     .buffer_size_out = qpa_buffer_size_out,
     .get_buffer_out = qpa_get_buffer_out,
     .put_buffer_out = qpa_write, /* pa handles it */
-    .ctl_out  = qpa_ctl_out,
+    .volume_out = qpa_volume_out,
 
     .init_in  = qpa_init_in,
     .fini_in  = qpa_fini_in,
@@ -781,7 +756,7 @@ static struct audio_pcm_ops qpa_pcm_ops = {
     .buffer_size_in = qpa_buffer_size_in,
     .get_buffer_in = qpa_get_buffer_in,
     .put_buffer_in = qpa_put_buffer_in,
-    .ctl_in   = qpa_ctl_in
+    .volume_in = qpa_volume_in
 };
 
 struct audio_driver pa_audio_driver = {
@@ -795,5 +770,4 @@ struct audio_driver pa_audio_driver = {
     .max_voices_in  = INT_MAX,
     .voice_size_out = sizeof (PAVoiceOut),
     .voice_size_in  = sizeof (PAVoiceIn),
-    .ctl_caps       = VOICE_VOLUME_CAP
 };

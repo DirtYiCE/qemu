@@ -169,14 +169,13 @@ static void wav_fini_out (HWVoiceOut *hw)
     wav->f = NULL;
 }
 
-static int wav_ctl_out (HWVoiceOut *hw, int cmd, ...)
+static void wav_enable_out(HWVoiceOut *hw, bool enable)
 {
     WAVVoiceOut *wav = (WAVVoiceOut *) hw;
 
-    if (cmd == VOICE_ENABLE) {
+    if (enable) {
         audio_rate_start(&wav->rate);
     }
-    return 0;
 }
 
 static void *wav_audio_init(Audiodev *dev)
@@ -194,7 +193,7 @@ static struct audio_pcm_ops wav_pcm_ops = {
     .init_out = wav_init_out,
     .fini_out = wav_fini_out,
     .write    = wav_write_out,
-    .ctl_out  = wav_ctl_out,
+    .enable_out = wav_enable_out,
 };
 
 struct audio_driver wav_audio_driver = {
