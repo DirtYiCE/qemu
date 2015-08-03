@@ -350,20 +350,9 @@ static size_t sdl_buffer_size_out(HWVoiceOut *hw)
     return sdl->samples;
 }
 
-static int sdl_ctl_out (HWVoiceOut *hw, int cmd, ...)
+static void sdl_enable_out(HWVoiceOut *hw, bool enable)
 {
-    (void) hw;
-
-    switch (cmd) {
-    case VOICE_ENABLE:
-        SDL_PauseAudio (0);
-        break;
-
-    case VOICE_DISABLE:
-        SDL_PauseAudio (1);
-        break;
-    }
-    return 0;
+    SDL_PauseAudio(!enable);
 }
 
 static void *sdl_audio_init(Audiodev *dev)
@@ -417,7 +406,7 @@ static struct audio_pcm_ops sdl_pcm_ops = {
     .buffer_size_out = sdl_buffer_size_out,
     .get_buffer_out = sdl_get_buffer_out,
     .put_buffer_out = sdl_put_buffer_out_nowrite,
-    .ctl_out  = sdl_ctl_out,
+    .enable_out = sdl_enable_out,
 };
 
 struct audio_driver sdl_audio_driver = {

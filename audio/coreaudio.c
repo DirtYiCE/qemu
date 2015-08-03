@@ -662,13 +662,12 @@ static void coreaudio_fini_out (HWVoiceOut *hw)
     }
 }
 
-static int coreaudio_ctl_out (HWVoiceOut *hw, int cmd, ...)
+static void coreaudio_enable_out (HWVoiceOut *hw, bool enable)
 {
     OSStatus status;
     coreaudioVoiceOut *core = (coreaudioVoiceOut *) hw;
 
-    switch (cmd) {
-    case VOICE_ENABLE:
+    if (enable) {
         /* start playback */
         if (!isPlaying(core->outputDeviceID)) {
             status = AudioDeviceStart(core->outputDeviceID, core->ioprocid);
@@ -676,9 +675,7 @@ static int coreaudio_ctl_out (HWVoiceOut *hw, int cmd, ...)
                 coreaudio_logerr (status, "Could not resume playback\n");
             }
         }
-        break;
-
-    case VOICE_DISABLE:
+    } else {
         /* stop playback */
         if (!isAtexit) {
             if (isPlaying(core->outputDeviceID)) {
@@ -689,9 +686,7 @@ static int coreaudio_ctl_out (HWVoiceOut *hw, int cmd, ...)
                 }
             }
         }
-        break;
     }
-    return 0;
 }
 
 static void *coreaudio_audio_init(Audiodev *dev)
@@ -711,7 +706,7 @@ static struct audio_pcm_ops coreaudio_pcm_ops = {
     .buffer_size_out = coreaudio_buffer_size_out,
     .get_buffer_out = coreaudio_get_buffer_out,
     .put_buffer_out = coreaudio_put_buffer_out_nowrite,
-    .ctl_out  = coreaudio_ctl_out
+    .enable_out = coreaudio_enable_out
 };
 
 struct audio_driver coreaudio_audio_driver = {
