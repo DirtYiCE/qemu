@@ -131,8 +131,9 @@ static void *line_out_get_buffer(HWVoiceOut *hw, size_t *size)
         out->fpos = 0;
     }
 
-    *size = audio_rate_get_bytes(&hw->info, &out->rate,
-                                 (out->fsize - out->fpos) << hw->info.shift);
+    *size = audio_rate_get_bytes(
+        &hw->info, &out->rate,
+        (out->fsize - out->fpos) * hw->info.bytes_per_frame);
     return out->frame + out->fpos;
 }
 
