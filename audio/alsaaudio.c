@@ -499,13 +499,6 @@ static int alsa_open(bool in, struct alsa_params_req *req,
         goto err;
     }
 
-    if (nchannels != 1 && nchannels != 2) {
-        alsa_logerr2 (err, typ,
-                      "Can not handle obtained number of channels %d\n",
-                      nchannels);
-        goto err;
-    }
-
     if (pdo->buffer_count) {
         if (pdo->buffer_len) {
             int64_t req = pdo->buffer_len * pdo->buffer_count;
