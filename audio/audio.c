@@ -69,6 +69,8 @@ const struct mixeng_volume nominal_volume = {
 #endif
 };
 
+static bool legacy_config;
+
 #ifdef AUDIO_IS_FLAWLESS_AND_NO_CHECKS_ARE_REQURIED
 #error No its not
 #else
@@ -1331,8 +1333,13 @@ static AudioState *audio_init(Audiodev *dev)
     if (dev) {
         drvname = AudiodevDriver_lookup[dev->kind];
     } else if (!QTAILQ_EMPTY(&audio_states)) {
+        if (!legacy_config) {
+            dolog("Must specify audiodev when using -audiodev\n");
+            exit(1);
+        }
         return QTAILQ_FIRST(&audio_states);
     } else {
+        legacy_config = true;
         audio_handle_legacy_opts();
         list = qemu_find_opts("audiodev");
         dev = parse_option(QTAILQ_FIRST(&list->head), &error_abort);
@@ -1463,7 +1470,11 @@ CaptureVoiceOut *AUD_add_capture(
     CaptureVoiceOut *cap;
     struct capture_callback *cb;
 
-    if (!s) { /* todo */
+    if (!s) {
+        if (!legacy_config) {
+            dolog("Must specify audiodev when using -audiodev\n");
+            goto err0;
+        }
         s = QTAILQ_FIRST(&audio_states);
     }
 
