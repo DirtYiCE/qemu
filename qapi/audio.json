@@ -119,11 +119,14 @@
 #
 # @name: #optional name of the sink/source to use
 #
+# @channel-map: #optional channel map to use (default: OSS compatible map)
+#
 # Since: 2.6
 ##
 { 'struct': 'AudiodevPaPerDirectionOptions',
   'data': {
-    '*name': 'str' } }
+    '*name':        'str',
+    '*channel-map': 'str' } }
 
 ##
 # @AudiodevPaOptions

@@ -372,6 +372,7 @@ DEF("audiodev", HAS_ARG, QEMU_OPTION_audiodev,
     "-audiodev pa,id=id[,prop[=value][,...]]\n"
     "                server= PulseAudio server address\n"
     "                sink|source.name= sink/source device name\n"
+    "                sink|source.channel-map= channel map to use\n"
 #endif
 #ifdef CONFIG_SDL
     "-audiodev sdl,id=id[,prop[=value][,...]]\n"
@@ -524,6 +525,14 @@ Sets the PulseAudio @var{server} to connect to.
 
 @item sink|source.name=@var{sink}
 Use the specified sink/source for playback/recording.
+
+@item sink|source.channel-map=@var{map}
+Use the specified channel map.  The default is an OSS compatible
+channel map.  Do not forget to escape commas inside the map:
+
+@example
+-audiodev pa,id=example,sink.channel-map=front-left,,front-right
+@end example
 
 @end table
 
