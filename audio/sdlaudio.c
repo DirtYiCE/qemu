@@ -42,11 +42,11 @@
 
 typedef struct SDLVoiceOut {
     HWVoiceOut hw;
-    int live;
+    size_t live;
 #if USE_SEMAPHORE
-    int rpos;
+    size_t rpos;
 #endif
-    int decr;
+    size_t decr;
 } SDLVoiceOut;
 
 static struct SDLAudioState {
@@ -252,14 +252,14 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
     SDLVoiceOut *sdl = opaque;
     SDLAudioState *s = &glob_sdl;
     HWVoiceOut *hw = &sdl->hw;
-    int samples = len >> hw->info.shift;
+    size_t samples = len >> hw->info.shift;
 
     if (s->exit) {
         return;
     }
 
     while (samples) {
-        int to_mix, decr;
+        size_t to_mix, decr;
 
         /* dolog ("in callback samples=%d\n", samples); */
 #if USE_SEMAPHORE
@@ -273,8 +273,7 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
         }
 
         if (audio_bug(__func__, sdl->live < 0 || sdl->live > hw->samples)) {
-            dolog ("sdl->live=%d hw->samples=%d\n",
-                   sdl->live, hw->samples);
+            dolog("sdl->live=%d hw->samples=%zu\n", sdl->live, hw->samples);
             return;
         }
 
@@ -291,7 +290,7 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
         to_mix = MIN (samples, sdl->live);
         decr = to_mix;
         while (to_mix) {
-            int chunk = MIN (to_mix, hw->samples - hw->rpos);
+            size_t chunk = MIN(to_mix, hw->samples - hw->rpos);
             struct st_sample *src = hw->mix_buf + hw->rpos;
 
             /* dolog ("in callback to_mix %d, chunk %d\n", to_mix, chunk); */
@@ -325,9 +324,9 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
 #endif
 }
 
-static int sdl_run_out (HWVoiceOut *hw, int live)
+static size_t sdl_run_out(HWVoiceOut *hw, size_t live)
 {
-    int decr;
+    size_t decr;
     SDLVoiceOut *sdl = (SDLVoiceOut *) hw;
     SDLAudioState *s = &glob_sdl;
 

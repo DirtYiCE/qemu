@@ -114,7 +114,12 @@ SWVoiceOut *AUD_open_out (
     );
 
 void AUD_close_out (QEMUSoundCard *card, SWVoiceOut *sw);
-int  AUD_write (SWVoiceOut *sw, void *pcm_buf, int size);
+/**
+ * AUD_write:
+ *
+ * Returns: the number of bytes written.
+ */
+size_t AUD_write (SWVoiceOut *sw, void *pcm_buf, size_t size);
 int  AUD_get_buffer_size_out (SWVoiceOut *sw);
 void AUD_set_active_out (SWVoiceOut *sw, int on);
 int  AUD_is_active_out (SWVoiceOut *sw);
@@ -135,7 +140,12 @@ SWVoiceIn *AUD_open_in (
     );
 
 void AUD_close_in (QEMUSoundCard *card, SWVoiceIn *sw);
-int  AUD_read (SWVoiceIn *sw, void *pcm_buf, int size);
+/**
+ * AUD_read:
+ *
+ * Returns: the number of bytes read.
+ */
+size_t AUD_read (SWVoiceIn *sw, void *pcm_buf, size_t size);
 void AUD_set_active_in (SWVoiceIn *sw, int on);
 int  AUD_is_active_in (SWVoiceIn *sw);
 
