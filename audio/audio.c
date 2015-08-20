@@ -1742,8 +1742,6 @@ CaptureVoiceOut *AUD_add_capture(
         QLIST_INIT (&hw->sw_head);
         QLIST_INIT (&cap->cb_head);
 
-        /* XXX find a more elegant way */
-        hw->samples = 4096 * 4;
         audio_pcm_hw_alloc_resources_out(hw);
 
         audio_pcm_init_info (&hw->info, as);

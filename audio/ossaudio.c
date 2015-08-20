@@ -44,6 +44,7 @@ typedef struct OSSVoiceOut {
     int nfrags;
     int fragsize;
     int mmapped;
+    size_t samples;
     Audiodev *dev;
 } OSSVoiceOut;
 
@@ -52,6 +53,7 @@ typedef struct OSSVoiceIn {
     int fd;
     int nfrags;
     int fragsize;
+    size_t samples;
     Audiodev *dev;
 } OSSVoiceIn;
 
@@ -511,11 +513,11 @@ static int oss_init_out(HWVoiceOut *hw, struct audsettings *as,
                obt.nfrags * obt.fragsize, hw->info.align + 1);
     }
 
-    hw->samples = (obt.nfrags * obt.fragsize) >> hw->info.shift;
+    oss->samples = (obt.nfrags * obt.fragsize) >> hw->info.shift;
 
     oss->mmapped = 0;
     if (oopts->has_try_mmap && oopts->try_mmap) {
-        hw->size_emul = hw->samples << hw->info.shift;
+        hw->size_emul = oss->samples << hw->info.shift;
         hw->buf_emul = mmap (
             NULL,
             hw->size_emul,
@@ -561,6 +563,12 @@ static int oss_init_out(HWVoiceOut *hw, struct audsettings *as,
     oss->fd = fd;
     oss->dev = dev;
     return 0;
+}
+
+static size_t oss_buffer_size_out(HWVoiceOut *hw)
+{
+    OSSVoiceOut *oss = (OSSVoiceOut *) hw;
+    return oss->samples;
 }
 
 static int oss_ctl_out (HWVoiceOut *hw, int cmd, ...)
@@ -658,11 +666,17 @@ static int oss_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
                obt.nfrags * obt.fragsize, hw->info.align + 1);
     }
 
-    hw->samples = (obt.nfrags * obt.fragsize) >> hw->info.shift;
+    oss->samples = (obt.nfrags * obt.fragsize) >> hw->info.shift;
 
     oss->fd = fd;
     oss->dev = dev;
     return 0;
+}
+
+static size_t oss_buffer_size_in(HWVoiceIn *hw)
+{
+    OSSVoiceIn *oss = (OSSVoiceIn *) hw;
+    return oss->samples;
 }
 
 static void oss_fini_in (HWVoiceIn *hw)
@@ -753,6 +767,7 @@ static struct audio_pcm_ops oss_pcm_ops = {
     .init_out = oss_init_out,
     .fini_out = oss_fini_out,
     .write    = oss_write,
+    .buffer_size_out = oss_buffer_size_out,
     .get_buffer_out = oss_get_buffer_out,
     .put_buffer_out = oss_put_buffer_out,
     .ctl_out  = oss_ctl_out,
@@ -760,6 +775,7 @@ static struct audio_pcm_ops oss_pcm_ops = {
     .init_in  = oss_init_in,
     .fini_in  = oss_fini_in,
     .read     = oss_read,
+    .buffer_size_in = oss_buffer_size_in,
     .ctl_in   = oss_ctl_in
 };
 
