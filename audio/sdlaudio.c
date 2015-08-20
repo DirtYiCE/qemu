@@ -42,11 +42,6 @@
 
 typedef struct SDLVoiceOut {
     HWVoiceOut hw;
-    size_t live;
-#if USE_SEMAPHORE
-    size_t rpos;
-#endif
-    size_t decr;
 } SDLVoiceOut;
 
 static struct SDLAudioState {
@@ -252,17 +247,13 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
     SDLVoiceOut *sdl = opaque;
     SDLAudioState *s = &glob_sdl;
     HWVoiceOut *hw = &sdl->hw;
-    size_t samples = len >> hw->info.shift;
 
     if (s->exit) {
         return;
     }
 
-    while (samples) {
-        size_t to_mix, decr;
-
-        /* dolog ("in callback samples=%d\n", samples); */
 #if USE_SEMAPHORE
+    while (len) {
         sdl_wait (s, "sdl_callback");
         if (s->exit) {
             return;
@@ -271,94 +262,65 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
         if (sdl_lock (s, "sdl_callback")) {
             return;
         }
-
-        if (audio_bug(__func__, sdl->live < 0 || sdl->live > hw->samples)) {
-            dolog("sdl->live=%d hw->samples=%zu\n", sdl->live, hw->samples);
-            return;
-        }
-
-        if (!sdl->live) {
-            goto again;
-        }
-#else
-        if (s->exit || !sdl->live) {
-            break;
-        }
 #endif
 
-        /* dolog ("in callback live=%d\n", live); */
-        to_mix = MIN (samples, sdl->live);
-        decr = to_mix;
-        while (to_mix) {
-            size_t chunk = MIN(to_mix, hw->samples - hw->rpos);
-            struct st_sample *src = hw->mix_buf + hw->rpos;
+        while (hw->pending_emul && len) {
+            size_t write_len;
+            ssize_t start = ((ssize_t) hw->pos_emul) - hw->pending_emul;
+            if (start < 0) {
+                start += hw->size_emul;
+            }
+            assert(start >= 0 && start < hw->size_emul);
 
-            /* dolog ("in callback to_mix %d, chunk %d\n", to_mix, chunk); */
-            hw->clip (buf, src, chunk);
-#if USE_SEMAPHORE
-            sdl->rpos = (sdl->rpos + chunk) % hw->samples;
-#else
-            hw->rpos = (hw->rpos + chunk) % hw->samples;
-#endif
-            to_mix -= chunk;
-            buf += chunk << hw->info.shift;
+            write_len = MIN(MIN(hw->pending_emul, len),
+                            hw->size_emul - start);
+
+            memcpy(buf, hw->buf_emul + start, write_len);
+            hw->pending_emul -= write_len;
+            len -= write_len;
+            buf += write_len;
         }
-        samples -= decr;
-        sdl->live -= decr;
-        sdl->decr += decr;
 
 #if USE_SEMAPHORE
-    again:
         if (sdl_unlock (s, "sdl_callback")) {
             return;
         }
-#endif
     }
-    /* dolog ("done len=%d\n", len); */
-
-#if (SDL_MAJOR_VERSION >= 2)
-    /* SDL2 does not clear the remaining buffer for us, so do it on our own */
-    if (samples) {
-        memset(buf, 0, samples << hw->info.shift);
-    }
-#endif
-}
-
-static size_t sdl_run_out(HWVoiceOut *hw, size_t live)
-{
-    size_t decr;
-    SDLVoiceOut *sdl = (SDLVoiceOut *) hw;
-    SDLAudioState *s = &glob_sdl;
-
-    if (sdl_lock (s, "sdl_run_out")) {
-        return 0;
-    }
-
-    if (sdl->decr > live) {
-        ldebug ("sdl->decr %d live %d sdl->live %d\n",
-                sdl->decr,
-                live,
-                sdl->live);
-    }
-
-    decr = MIN (sdl->decr, live);
-    sdl->decr -= decr;
-
-#if USE_SEMAPHORE
-    sdl->live = live - decr;
-    hw->rpos = sdl->rpos;
 #else
-    sdl->live = live;
+    /* clear remaining buffer that we couldn't fill with data */
+    if (len) {
+        memset(buf, 0, len);
+    }
 #endif
-
-    if (sdl->live > 0) {
-        sdl_unlock_and_post (s, "sdl_run_out");
-    }
-    else {
-        sdl_unlock (s, "sdl_run_out");
-    }
-    return decr;
 }
+
+#define SDL_WRAPPER_FUNC(name, ret_type, args_decl, args, fail, unlock) \
+    static ret_type glue(sdl_, name)args_decl                           \
+    {                                                                   \
+        SDLAudioState *s = &glob_sdl;                                   \
+        ret_type ret;                                                   \
+                                                                        \
+        if (sdl_lock(s, "sdl_" #name)) {                                \
+            fail;                                                       \
+            return 0; /* implicitly casts to NULL */                    \
+        }                                                               \
+                                                                        \
+        ret = glue(audio_generic_, name)args;                           \
+                                                                        \
+        unlock(s, "sdl_" #name);                                        \
+        return ret;                                                     \
+    }
+
+SDL_WRAPPER_FUNC(get_buffer_out, void *, (HWVoiceOut *hw, size_t *size),
+                 (hw, size), *size = 0, sdl_unlock)
+SDL_WRAPPER_FUNC(put_buffer_out_nowrite, size_t,
+                 (HWVoiceOut *hw, void *buf, size_t size), (hw, buf, size),
+                 /*nothing*/, sdl_unlock_and_post)
+SDL_WRAPPER_FUNC(write, size_t,
+                 (HWVoiceOut *hw, void *buf, size_t size), (hw, buf, size),
+                 /* nothing */, sdl_unlock_and_post)
+
+#undef SDL_WRAPPER_FUNC
 
 static void sdl_fini_out (HWVoiceOut *hw)
 {
@@ -476,7 +438,9 @@ static void sdl_audio_fini (void *opaque)
 static struct audio_pcm_ops sdl_pcm_ops = {
     .init_out = sdl_init_out,
     .fini_out = sdl_fini_out,
-    .run_out  = sdl_run_out,
+    .write    = sdl_write,
+    .get_buffer_out = sdl_get_buffer_out,
+    .put_buffer_out = sdl_put_buffer_out_nowrite,
     .ctl_out  = sdl_ctl_out,
 };
 
