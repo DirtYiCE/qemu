@@ -284,11 +284,6 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
     /* dolog ("done len=%d\n", len); */
 }
 
-static int sdl_write_out (SWVoiceOut *sw, void *buf, int len)
-{
-    return audio_pcm_sw_write (sw, buf, len);
-}
-
 static int sdl_run_out (HWVoiceOut *hw, int live)
 {
     int decr;
@@ -434,7 +429,6 @@ static struct audio_pcm_ops sdl_pcm_ops = {
     .init_out = sdl_init_out,
     .fini_out = sdl_fini_out,
     .run_out  = sdl_run_out,
-    .write    = sdl_write_out,
     .ctl_out  = sdl_ctl_out,
 };
 
