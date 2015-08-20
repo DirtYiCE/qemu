@@ -178,6 +178,34 @@ expect_u64_max(OptsVisitorFixture *f, gconstpointer test_data)
     g_assert(f->userdef->u64->value == UINT64_MAX);
 }
 
+static void
+expect_both(OptsVisitorFixture *f, gconstpointer test_data)
+{
+    expect_ok(f, test_data);
+    g_assert(f->userdef->sub0->has_nint);
+    g_assert(f->userdef->sub0->nint == 13);
+    g_assert(f->userdef->sub1->has_nint);
+    g_assert(f->userdef->sub1->nint == 17);
+}
+
+static void
+expect_sub0(OptsVisitorFixture *f, gconstpointer test_data)
+{
+    expect_ok(f, test_data);
+    g_assert(f->userdef->sub0->has_nint);
+    g_assert(f->userdef->sub0->nint == 13);
+    g_assert(!f->userdef->sub1->has_nint);
+}
+
+static void
+expect_sub1(OptsVisitorFixture *f, gconstpointer test_data)
+{
+    expect_ok(f, test_data);
+    g_assert(!f->userdef->sub0->has_nint);
+    g_assert(f->userdef->sub1->has_nint);
+    g_assert(f->userdef->sub1->nint == 13);
+}
+
 /* test cases */
 
 int
@@ -271,6 +299,12 @@ main(int argc, char **argv)
     add_test("/visitor/opts/i64/range/2big/full", &expect_fail,
              "i64=-0x8000000000000000-0x7fffffffffffffff");
 
+    /* Test nested structs support */
+    add_test("/visitor/opts/nested/unqualified", &expect_fail, "nint=13");
+    add_test("/visitor/opts/nested/both",        &expect_both,
+             "sub0.nint=13,sub1.nint=17");
+    add_test("/visitor/opts/nested/sub0",        &expect_sub0, "sub0.nint=13");
+    add_test("/visitor/opts/nested/sub1",        &expect_sub1, "sub1.nint=13");
     g_test_run();
     return 0;
 }
