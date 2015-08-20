@@ -136,8 +136,8 @@ static int wav_init_out(HWVoiceOut *hw, struct audsettings *as,
     hw->samples = 1024;
     wav->pcm_buf = audio_calloc (AUDIO_FUNC, hw->samples, 1 << hw->info.shift);
     if (!wav->pcm_buf) {
-        dolog ("Could not allocate buffer (%d bytes)\n",
-               hw->samples << hw->info.shift);
+        dolog("Could not allocate buffer (%zu bytes)\n",
+              hw->samples << hw->info.shift);
         return -1;
     }
 

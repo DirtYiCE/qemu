@@ -748,8 +748,8 @@ static int alsa_init_out(HWVoiceOut *hw, struct audsettings *as,
 
     alsa->pcm_buf = audio_calloc (AUDIO_FUNC, obt.samples, 1 << hw->info.shift);
     if (!alsa->pcm_buf) {
-        dolog ("Could not allocate DAC buffer (%d samples, each %d bytes)\n",
-               hw->samples, 1 << hw->info.shift);
+        dolog("Could not allocate DAC buffer (%zu samples, each %d bytes)\n",
+              hw->samples, 1 << hw->info.shift);
         alsa_anal_close1 (&handle);
         return -1;
     }
@@ -850,8 +850,8 @@ static int alsa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 
     alsa->pcm_buf = audio_calloc (AUDIO_FUNC, hw->samples, 1 << hw->info.shift);
     if (!alsa->pcm_buf) {
-        dolog ("Could not allocate ADC buffer (%d samples, each %d bytes)\n",
-               hw->samples, 1 << hw->info.shift);
+        dolog("Could not allocate ADC buffer (%zu samples, each %d bytes)\n",
+              hw->samples, 1 << hw->info.shift);
         alsa_anal_close1 (&handle);
         return -1;
     }
