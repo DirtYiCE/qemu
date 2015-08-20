@@ -51,6 +51,11 @@ struct audio_pcm_info {
 
 typedef struct SWVoiceCap SWVoiceCap;
 
+typedef struct STSampleBuffer {
+    size_t pos, size;
+    st_sample samples[];
+} STSampleBuffer;
+
 typedef struct HWVoiceOut {
     AudioState *s;
     int enabled;
@@ -59,11 +64,9 @@ typedef struct HWVoiceOut {
     struct audio_pcm_info info;
 
     f_sample *clip;
-
-    size_t rpos;
     uint64_t ts_helper;
 
-    struct st_sample *mix_buf;
+    STSampleBuffer *mix_buf;
     void *buf_emul;
     size_t pos_emul, pending_emul, size_emul;
 
@@ -83,11 +86,10 @@ typedef struct HWVoiceIn {
 
     t_sample *conv;
 
-    size_t wpos;
     size_t total_samples_captured;
     uint64_t ts_helper;
 
-    struct st_sample *conv_buf;
+    STSampleBuffer *conv_buf;
     void *buf_emul;
     size_t pos_emul, pending_emul, size_emul;
 
