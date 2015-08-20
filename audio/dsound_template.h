@@ -254,7 +254,7 @@ static int dsound_init_out(HWVoiceOut *hw, struct audsettings *as,
             );
     }
     hw->size_emul = bc.dwBufferBytes;
-    hw->samples = bc.dwBufferBytes >> hw->info.shift;
+    ds->samples = bc.dwBufferBytes >> hw->info.shift;
     ds->s = s;
 
 #ifdef DEBUG_DSOUND
@@ -266,6 +266,12 @@ static int dsound_init_out(HWVoiceOut *hw, struct audsettings *as,
  fail0:
     glue (dsound_fini_, TYPE) (hw);
     return -1;
+}
+
+static size_t glue(dsound_buffer_size_, TYPE)(HWVOICE *hw)
+{
+    DSOUNDVOICE *ds = (DSOUNDVOICE *) hw;
+    return ds->samples;
 }
 
 #undef NAME

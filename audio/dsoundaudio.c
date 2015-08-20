@@ -53,12 +53,14 @@ typedef struct {
     HWVoiceOut hw;
     LPDIRECTSOUNDBUFFER dsound_buffer;
     dsound *s;
+    size_t samples;
 } DSoundVoiceOut;
 
 typedef struct {
     HWVoiceIn hw;
     LPDIRECTSOUNDCAPTUREBUFFER dsound_capture_buffer;
     dsound *s;
+    size_t samples;
 } DSoundVoiceIn;
 
 static void dsound_log_hresult (HRESULT hr)
@@ -671,6 +673,7 @@ static struct audio_pcm_ops dsound_pcm_ops = {
     .init_out = dsound_init_out,
     .fini_out = dsound_fini_out,
     .write    = audio_generic_write,
+    .buffer_size_out = dsound_buffer_size_out,
     .get_buffer_out = dsound_get_buffer_out,
     .put_buffer_out = dsound_put_buffer_out,
     .ctl_out  = dsound_ctl_out,
@@ -678,6 +681,7 @@ static struct audio_pcm_ops dsound_pcm_ops = {
     .init_in  = dsound_init_in,
     .fini_in  = dsound_fini_in,
     .read     = audio_generic_read,
+    .buffer_size_in = dsound_buffer_size_in,
     .get_buffer_in = dsound_get_buffer_in,
     .put_buffer_in = dsound_put_buffer_in,
     .ctl_in   = dsound_ctl_in

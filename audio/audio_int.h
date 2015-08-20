@@ -69,7 +69,6 @@ typedef struct HWVoiceOut {
     void *buf_emul;
     size_t pos_emul, pending_emul, size_emul;
 
-    size_t samples;
     QLIST_HEAD (sw_out_listhead, SWVoiceOut) sw_head;
     QLIST_HEAD (sw_cap_listhead, SWVoiceCap) cap_head;
     int ctl_caps;
@@ -92,7 +91,6 @@ typedef struct HWVoiceIn {
     void *buf_emul;
     size_t pos_emul, pending_emul, size_emul;
 
-    size_t samples;
     QLIST_HEAD (sw_in_listhead, SWVoiceIn) sw_head;
     int ctl_caps;
     struct audio_pcm_ops *pcm_ops;
@@ -152,6 +150,8 @@ struct audio_pcm_ops {
     int    (*init_out)(HWVoiceOut *hw, audsettings *as, void *drv_opaque);
     void   (*fini_out)(HWVoiceOut *hw);
     size_t (*write)   (HWVoiceOut *hw, void *buf, size_t size);
+    /* get the optimal buffer size in samples; optional */
+    size_t (*buffer_size_out)(HWVoiceOut *hw);
     /* get a buffer that after later can be passed to put_buffer_out; optional
      * returns the buffer, and writes it's size to size (in bytes)
      * this is unrelated to the above buffer_size_out function */
@@ -165,6 +165,7 @@ struct audio_pcm_ops {
     int    (*init_in) (HWVoiceIn *hw, audsettings *as, void *drv_opaque);
     void   (*fini_in) (HWVoiceIn *hw);
     size_t (*read)    (HWVoiceIn *hw, void *buf, size_t size);
+    size_t (*buffer_size_in)(HWVoiceIn *hw);
     void  *(*get_buffer_in)(HWVoiceIn *hw, size_t *size);
     void   (*put_buffer_in)(HWVoiceIn *hw, void *buf, size_t size);
     int    (*ctl_in)  (HWVoiceIn *hw, int cmd, ...);

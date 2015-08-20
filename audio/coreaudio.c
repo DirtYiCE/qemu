@@ -40,6 +40,7 @@ typedef struct coreaudioVoiceOut {
     AudioDeviceID outputDeviceID;
     UInt32 audioDevicePropertyBufferFrameSize;
     AudioStreamBasicDescription outputStreamBasicDescription;
+    size_t samples;
 } coreaudioVoiceOut;
 
 static void coreaudio_logstatus (OSStatus status)
@@ -366,7 +367,7 @@ static int coreaudio_init_out(HWVoiceOut *hw, struct audsettings *as,
                            "Could not get device buffer frame size\n");
         return -1;
     }
-    hw->samples = (pdo->has_buffer_count ? pdo->buffer_count : 4) *
+    core->samples = (pdo->has_buffer_count ? pdo->buffer_count : 4) *
         core->audioDevicePropertyBufferFrameSize;
 
     /* get StreamFormat */
@@ -433,6 +434,12 @@ static int coreaudio_init_out(HWVoiceOut *hw, struct audsettings *as,
     }
 
     return 0;
+}
+
+static size_t coreaudio_buffer_size_out(HWVoiceOut *hw)
+{
+    coreaudioVoiceOut *core = (coreaudioVoiceOut *) hw;
+    return core->samples;
 }
 
 static void coreaudio_fini_out (HWVoiceOut *hw)
@@ -511,6 +518,7 @@ static struct audio_pcm_ops coreaudio_pcm_ops = {
     .init_out = coreaudio_init_out,
     .fini_out = coreaudio_fini_out,
     .write    = coreaudio_write,
+    .buffer_size_out = coreaudio_buffer_size_out,
     .get_buffer_out = coreaudio_get_buffer_out,
     .put_buffer_out = coreaudio_put_buffer_out_nowrite,
     .ctl_out  = coreaudio_ctl_out

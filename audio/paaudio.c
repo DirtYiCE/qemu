@@ -362,6 +362,13 @@ static int qpa_init_out(HWVoiceOut *hw, struct audsettings *as,
     return -1;
 }
 
+static size_t qpa_buffer_size_out(HWVoiceOut *hw)
+{
+    PAVoiceOut *pa = (PAVoiceOut *) hw;
+    return pa->samples;
+}
+
+
 static int qpa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 {
     int error;
@@ -401,6 +408,12 @@ static int qpa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 
  fail1:
     return -1;
+}
+
+static size_t qpa_buffer_size_in(HWVoiceIn *hw)
+{
+    PAVoiceIn *pa = (PAVoiceIn *) hw;
+    return pa->samples;
 }
 
 static void qpa_simple_disconnect(PAConnection *c, pa_stream *stream)
@@ -679,11 +692,13 @@ static struct audio_pcm_ops qpa_pcm_ops = {
     .init_out = qpa_init_out,
     .fini_out = qpa_fini_out,
     .write    = qpa_write,
+    .buffer_size_out = qpa_buffer_size_out,
     .ctl_out  = qpa_ctl_out,
 
     .init_in  = qpa_init_in,
     .fini_in  = qpa_fini_in,
     .read     = qpa_read,
+    .buffer_size_in = qpa_buffer_size_in,
     .ctl_in   = qpa_ctl_in
 };
 

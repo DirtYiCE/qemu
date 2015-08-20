@@ -78,7 +78,12 @@ static void glue (audio_pcm_hw_free_resources_, TYPE) (HW *hw)
 
 static void glue(audio_pcm_hw_alloc_resources_, TYPE)(HW *hw)
 {
-    size_t samples = hw->samples;
+    size_t samples;
+    if (hw->pcm_ops->glue(buffer_size_, TYPE)) {
+        samples = hw->pcm_ops->glue(buffer_size_, TYPE)(hw);
+    } else {
+        samples = 1024; /* todo better default */
+    }
 
     HWBUF = g_malloc0(sizeof(STSampleBuffer) + sizeof(st_sample)*samples);
     HWBUF->size = samples;
@@ -261,11 +266,6 @@ static HW *glue(audio_pcm_hw_add_new_, TYPE)(AudioState *s,
         goto err0;
     }
 
-    if (audio_bug (AUDIO_FUNC, hw->samples <= 0)) {
-        dolog("hw->samples=%zu\n", hw->samples);
-        goto err1;
-    }
-
 #ifdef DAC
     hw->clip = mixeng_clip
 #else
@@ -285,9 +285,7 @@ static HW *glue(audio_pcm_hw_add_new_, TYPE)(AudioState *s,
 #endif
     return hw;
 
- err1:
-    glue (hw->pcm_ops->fini_, TYPE) (hw);
- err0:
+err0:
     g_free (hw);
     return NULL;
 }
