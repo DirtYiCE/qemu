@@ -567,7 +567,7 @@ static int audio_pcm_sw_get_rpos_in (SWVoiceIn *sw)
     }
 }
 
-int audio_pcm_sw_read (SWVoiceIn *sw, void *buf, int size)
+static int audio_pcm_sw_read(SWVoiceIn *sw, void *buf, int size)
 {
     HWVoiceIn *hw = sw->hw;
     int samples, live, ret = 0, swlim, isamp, osamp, rpos, total = 0;
@@ -669,7 +669,7 @@ static int audio_pcm_hw_get_live_out (HWVoiceOut *hw, int *nb_live)
 /*
  * Soft voice (playback)
  */
-int audio_pcm_sw_write (SWVoiceOut *sw, void *buf, int size)
+static int audio_pcm_sw_write (SWVoiceOut *sw, void *buf, int size)
 {
     int hwsamples, samples, isamp, osamp, wpos, live, dead, left, swlim, blck;
     int ret = 0, pos = 0, total = 0;
@@ -800,8 +800,6 @@ static void audio_timer (void *opaque)
  */
 int AUD_write (SWVoiceOut *sw, void *buf, int size)
 {
-    int bytes;
-
     if (!sw) {
         /* XXX: Consider options */
         return size;
@@ -812,14 +810,11 @@ int AUD_write (SWVoiceOut *sw, void *buf, int size)
         return 0;
     }
 
-    bytes = sw->hw->pcm_ops->write (sw, buf, size);
-    return bytes;
+    return audio_pcm_sw_write(sw, buf, size);
 }
 
 int AUD_read (SWVoiceIn *sw, void *buf, int size)
 {
-    int bytes;
-
     if (!sw) {
         /* XXX: Consider options */
         return size;
@@ -830,8 +825,7 @@ int AUD_read (SWVoiceIn *sw, void *buf, int size)
         return 0;
     }
 
-    bytes = sw->hw->pcm_ops->read (sw, buf, size);
-    return bytes;
+    return audio_pcm_sw_read(sw, buf, size);
 }
 
 int AUD_get_buffer_size_out (SWVoiceOut *sw)
