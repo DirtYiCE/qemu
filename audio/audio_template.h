@@ -79,8 +79,8 @@ static int glue (audio_pcm_hw_alloc_resources_, TYPE) (HW *hw)
 {
     HWBUF = audio_calloc (AUDIO_FUNC, hw->samples, sizeof (struct st_sample));
     if (!HWBUF) {
-        dolog ("Could not allocate " NAME " buffer (%d samples)\n",
-               hw->samples);
+        dolog("Could not allocate " NAME " buffer (%zu samples)\n",
+              hw->samples);
         return -1;
     }
 
@@ -265,7 +265,7 @@ static HW *glue(audio_pcm_hw_add_new_, TYPE)(AudioState *s,
     }
 
     if (audio_bug (AUDIO_FUNC, hw->samples <= 0)) {
-        dolog ("hw->samples=%d\n", hw->samples);
+        dolog("hw->samples=%zu\n", hw->samples);
         goto err1;
     }
 

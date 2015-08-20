@@ -478,8 +478,8 @@ static void oss_fini_out (HWVoiceOut *hw)
         if (oss->mmapped) {
             err = munmap (oss->pcm_buf, hw->samples << hw->info.shift);
             if (err) {
-                oss_logerr (errno, "Failed to unmap buffer %p, size %d\n",
-                            oss->pcm_buf, hw->samples << hw->info.shift);
+                oss_logerr(errno, "Failed to unmap buffer %p, size %zu\n",
+                           oss->pcm_buf, hw->samples << hw->info.shift);
             }
         }
         else {
@@ -545,8 +545,8 @@ static int oss_init_out(HWVoiceOut *hw, struct audsettings *as,
             0
             );
         if (oss->pcm_buf == MAP_FAILED) {
-            oss_logerr (errno, "Failed to map %d bytes of DAC\n",
-                        hw->samples << hw->info.shift);
+            oss_logerr(errno, "Failed to map %zu bytes of DAC\n",
+                       hw->samples << hw->info.shift);
         }
         else {
             int err;
@@ -570,8 +570,8 @@ static int oss_init_out(HWVoiceOut *hw, struct audsettings *as,
             if (!oss->mmapped) {
                 err = munmap (oss->pcm_buf, hw->samples << hw->info.shift);
                 if (err) {
-                    oss_logerr (errno, "Failed to unmap buffer %p size %d\n",
-                                oss->pcm_buf, hw->samples << hw->info.shift);
+                    oss_logerr(errno, "Failed to unmap buffer %p size %zu\n",
+                               oss->pcm_buf, hw->samples << hw->info.shift);
                 }
             }
         }
@@ -585,7 +585,7 @@ static int oss_init_out(HWVoiceOut *hw, struct audsettings *as,
             );
         if (!oss->pcm_buf) {
             dolog (
-                "Could not allocate DAC buffer (%d samples, each %d bytes)\n",
+                "Could not allocate DAC buffer (%zu samples, each %d bytes)\n",
                 hw->samples,
                 1 << hw->info.shift
                 );
@@ -697,8 +697,8 @@ static int oss_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
     hw->samples = (obt.nfrags * obt.fragsize) >> hw->info.shift;
     oss->pcm_buf = audio_calloc (AUDIO_FUNC, hw->samples, 1 << hw->info.shift);
     if (!oss->pcm_buf) {
-        dolog ("Could not allocate ADC buffer (%d samples, each %d bytes)\n",
-               hw->samples, 1 << hw->info.shift);
+        dolog("Could not allocate ADC buffer (%zu samples, each %d bytes)\n",
+              hw->samples, 1 << hw->info.shift);
         oss_anal_close (&fd);
         return -1;
     }

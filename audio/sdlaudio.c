@@ -250,8 +250,8 @@ static void sdl_callback (void *opaque, Uint8 *buf, int len)
         }
 
         if (audio_bug (AUDIO_FUNC, sdl->live < 0 || sdl->live > hw->samples)) {
-            dolog ("sdl->live=%d hw->samples=%d\n",
-                   sdl->live, hw->samples);
+            dolog("sdl->live=%d hw->samples=%zu\n",
+                  sdl->live, hw->samples);
             return;
         }
 

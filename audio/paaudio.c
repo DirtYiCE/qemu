@@ -583,8 +583,8 @@ static int qpa_init_out(HWVoiceOut *hw, struct audsettings *as,
     pa->pcm_buf = audio_calloc (AUDIO_FUNC, hw->samples, 1 << hw->info.shift);
     pa->rpos = hw->rpos;
     if (!pa->pcm_buf) {
-        dolog ("Could not allocate buffer (%d bytes)\n",
-               hw->samples << hw->info.shift);
+        dolog("Could not allocate buffer (%zu bytes)\n",
+              hw->samples << hw->info.shift);
         goto fail2;
     }
 
@@ -644,8 +644,8 @@ static int qpa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
     pa->pcm_buf = audio_calloc (AUDIO_FUNC, hw->samples, 1 << hw->info.shift);
     pa->wpos = hw->wpos;
     if (!pa->pcm_buf) {
-        dolog ("Could not allocate buffer (%d bytes)\n",
-               hw->samples << hw->info.shift);
+        dolog("Could not allocate buffer (%zu bytes)\n",
+              hw->samples << hw->info.shift);
         goto fail2;
     }
 
