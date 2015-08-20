@@ -39,6 +39,7 @@
 
 typedef struct SDLVoiceOut {
     HWVoiceOut hw;
+    size_t samples;
 } SDLVoiceOut;
 
 static struct SDLAudioState {
@@ -335,12 +336,18 @@ static int sdl_init_out(HWVoiceOut *hw, struct audsettings *as,
     obt_as.endianness = endianness;
 
     audio_pcm_init_info (&hw->info, &obt_as);
-    hw->samples = obt.samples;
+    sdl->samples = obt.samples;
 
     s->initialized = 1;
     s->exit = 0;
     SDL_PauseAudio (0);
     return 0;
+}
+
+static size_t sdl_buffer_size_out(HWVoiceOut *hw)
+{
+    SDLVoiceOut *sdl = (SDLVoiceOut *) hw;
+    return sdl->samples;
 }
 
 static int sdl_ctl_out (HWVoiceOut *hw, int cmd, ...)
@@ -407,6 +414,7 @@ static struct audio_pcm_ops sdl_pcm_ops = {
     .init_out = sdl_init_out,
     .fini_out = sdl_fini_out,
     .write    = sdl_write,
+    .buffer_size_out = sdl_buffer_size_out,
     .get_buffer_out = sdl_get_buffer_out,
     .put_buffer_out = sdl_put_buffer_out_nowrite,
     .ctl_out  = sdl_ctl_out,

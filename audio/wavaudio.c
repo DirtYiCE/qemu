@@ -108,7 +108,6 @@ static int wav_init_out(HWVoiceOut *hw, struct audsettings *as,
     wav_as.endianness = 0;
     audio_pcm_init_info (&hw->info, &wav_as);
 
-    hw->samples = 1024;
     le_store (hdr + 22, hw->info.nchannels, 2);
     le_store (hdr + 24, hw->info.freq, 4);
     le_store (hdr + 28, hw->info.freq << (bits16 + stereo), 4);

@@ -56,7 +56,6 @@ static size_t no_write(HWVoiceOut *hw, void *buf, size_t len)
 static int no_init_out(HWVoiceOut *hw, struct audsettings *as, void *drv_opaque)
 {
     audio_pcm_init_info (&hw->info, as);
-    hw->samples = 1024;
     return 0;
 }
 
@@ -75,7 +74,6 @@ static int no_ctl_out (HWVoiceOut *hw, int cmd, ...)
 static int no_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
 {
     audio_pcm_init_info (&hw->info, as);
-    hw->samples = 1024;
     return 0;
 }
 

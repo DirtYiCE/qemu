@@ -46,6 +46,7 @@ struct pollhlp {
 typedef struct ALSAVoiceOut {
     HWVoiceOut hw;
     snd_pcm_t *handle;
+    size_t samples;
     struct pollhlp pollhlp;
     Audiodev *dev;
 } ALSAVoiceOut;
@@ -53,6 +54,7 @@ typedef struct ALSAVoiceOut {
 typedef struct ALSAVoiceIn {
     HWVoiceIn hw;
     snd_pcm_t *handle;
+    size_t samples;
     struct pollhlp pollhlp;
     Audiodev *dev;
 } ALSAVoiceIn;
@@ -697,12 +699,18 @@ static int alsa_init_out(HWVoiceOut *hw, struct audsettings *as,
     obt_as.endianness = obt.endianness;
 
     audio_pcm_init_info (&hw->info, &obt_as);
-    hw->samples = obt.samples;
+    alsa->samples = obt.samples;
 
     alsa->pollhlp.s = hw->s;
     alsa->handle = handle;
     alsa->dev = dev;
     return 0;
+}
+
+static size_t alsa_buffer_size_out(HWVoiceOut *hw)
+{
+    ALSAVoiceOut *alsa = (ALSAVoiceOut *) hw;
+    return alsa->samples;
 }
 
 #define VOICE_CTL_PAUSE 0
@@ -791,12 +799,18 @@ static int alsa_init_in(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
     obt_as.endianness = obt.endianness;
 
     audio_pcm_init_info (&hw->info, &obt_as);
-    hw->samples = obt.samples;
+    alsa->samples = obt.samples;
 
     alsa->pollhlp.s = hw->s;
     alsa->handle = handle;
     alsa->dev = dev;
     return 0;
+}
+
+static size_t alsa_buffer_size_in(HWVoiceIn *hw)
+{
+    ALSAVoiceIn *alsa = (ALSAVoiceIn *) hw;
+    return alsa->samples;
 }
 
 static void alsa_fini_in (HWVoiceIn *hw)
@@ -912,11 +926,13 @@ static void alsa_audio_fini (void *opaque)
 static struct audio_pcm_ops alsa_pcm_ops = {
     .init_out = alsa_init_out,
     .fini_out = alsa_fini_out,
+    .buffer_size_out = alsa_buffer_size_out,
     .write    = alsa_write,
     .ctl_out  = alsa_ctl_out,
 
     .init_in  = alsa_init_in,
     .fini_in  = alsa_fini_in,
+    .buffer_size_in = alsa_buffer_size_in,
     .read     = alsa_read,
     .ctl_in   = alsa_ctl_in,
 };

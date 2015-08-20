@@ -131,7 +131,6 @@ static int line_out_init(HWVoiceOut *hw, struct audsettings *as,
     settings.endianness = AUDIO_HOST_ENDIANNESS;
 
     audio_pcm_init_info (&hw->info, &settings);
-    hw->samples = LINE_OUT_SAMPLES;
     out->active = 0;
 
     out->sin.base.sif = &playback_sif.base;
@@ -140,6 +139,11 @@ static int line_out_init(HWVoiceOut *hw, struct audsettings *as,
     spice_server_set_playback_rate(&out->sin, settings.freq);
 #endif
     return 0;
+}
+
+static size_t line_out_buffer_size(HWVoiceOut *hw)
+{
+    return LINE_OUT_SAMPLES;
 }
 
 static void line_out_fini (HWVoiceOut *hw)
@@ -246,7 +250,6 @@ static int line_in_init(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
     settings.endianness = AUDIO_HOST_ENDIANNESS;
 
     audio_pcm_init_info (&hw->info, &settings);
-    hw->samples = LINE_IN_SAMPLES;
     in->active = 0;
 
     in->sin.base.sif = &record_sif.base;
@@ -255,6 +258,11 @@ static int line_in_init(HWVoiceIn *hw, struct audsettings *as, void *drv_opaque)
     spice_server_set_record_rate(&in->sin, settings.freq);
 #endif
     return 0;
+}
+
+static size_t line_in_buffer_size(HWVoiceIn *hw)
+{
+    return LINE_IN_SAMPLES;
 }
 
 static void line_in_fini (HWVoiceIn *hw)
@@ -327,6 +335,7 @@ static struct audio_pcm_ops audio_callbacks = {
     .init_out = line_out_init,
     .fini_out = line_out_fini,
     .write    = audio_generic_write,
+    .buffer_size_out = line_out_buffer_size,
     .get_buffer_out = line_out_get_buffer,
     .put_buffer_out = line_out_put_buffer,
     .ctl_out  = line_out_ctl,
@@ -334,6 +343,7 @@ static struct audio_pcm_ops audio_callbacks = {
     .init_in  = line_in_init,
     .fini_in  = line_in_fini,
     .read     = line_in_read,
+    .buffer_size_in = line_in_buffer_size,
     .ctl_in   = line_in_ctl,
 };
 
