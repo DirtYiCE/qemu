@@ -76,6 +76,21 @@ SimpleEnvMap dsound_map[] = {
     { /* End of list */ }
 };
 
+SimpleEnvMap oss_map[] = {
+    { "QEMU_AUDIO_DAC_TRY_POLL", "oss-out.try-poll", ENV_TRANSFORM_BOOL },
+    { "QEMU_AUDIO_ADC_TRY_POLL", "oss-in.try-poll", ENV_TRANSFORM_BOOL },
+
+    { "QEMU_OSS_FRAGSIZE", "buffer-len", ENV_TRANSFORM_BYTES_TO_USECS_OUT },
+    { "QEMU_OSS_NFRAGS", "buffer-count" },
+    { "QEMU_OSS_MMAP", "try-mmap", ENV_TRANSFORM_BOOL },
+    { "QEMU_OSS_DAC_DEV", "oss-out.dev" },
+    { "QEMU_OSS_ADC_DEV", "oss-in.dev" },
+    { "QEMU_OSS_EXCLUSIVE", "exclusive", ENV_TRANSFORM_BOOL },
+    { "QEMU_OSS_POLICY", "dsp-policy" },
+
+    { /* End of list */ }
+};
+
 static unsigned long long toull(const char *str)
 {
     unsigned long long ret;
@@ -250,6 +265,8 @@ static void legacy_opt(const char *drv)
         handle_env_opts(opts, coreaudio_map);
     } else if (strcmp(drv, "dsound") == 0) {
         handle_env_opts(opts, dsound_map);
+    } else if (strcmp(drv, "oss") == 0) {
+        handle_env_opts(opts, oss_map);
     }
 }
 
