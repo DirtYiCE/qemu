@@ -812,7 +812,7 @@ static PAConf glob_conf = {
     .samples = 4096,
 };
 
-static void *qpa_audio_init (void)
+static void *qpa_audio_init(Audiodev *dev)
 {
     paaudio *g = g_malloc(sizeof(paaudio));
     g->conf = glob_conf;
