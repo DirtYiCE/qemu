@@ -4326,6 +4326,8 @@ int main(int argc, char **argv, char **envp)
         exit(0);
     }
 
+    audio_set_options();
+
     machine_opts = qemu_get_machine_opts();
     if (qemu_opt_foreach(machine_opts, machine_set_property, current_machine,
                          NULL)) {
@@ -4540,7 +4542,6 @@ int main(int argc, char **argv, char **envp)
 
     realtime_init();
 
-    audio_set_options();
     audio_init();
 
     cpu_synchronize_all_post_init();

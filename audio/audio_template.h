@@ -399,7 +399,7 @@ SW *glue (AUD_open_, TYPE) (
     struct audsettings *as
     )
 {
-    AudioState *s = &glob_audio_state;
+    AudioState *s = card->state;
     AudiodevPerDirectionOptions *pdo = s->dev->TYPE;
 
     if (audio_bug (AUDIO_FUNC, !card || !name || !callback_fn || !as)) {

@@ -189,6 +189,8 @@ struct AudioState {
     int nb_hw_voices_in;
     int vm_running;
     int64_t period_ticks;
+
+    QTAILQ_ENTRY(AudioState) list;
 };
 
 extern struct audio_driver no_audio_driver;
