@@ -195,6 +195,8 @@ struct AudioState {
 
     bool timer_running;
     uint64_t timer_last;
+
+    QTAILQ_ENTRY(AudioState) list;
 };
 
 extern const struct mixeng_volume nominal_volume;
