@@ -144,7 +144,7 @@ struct audio_driver {
     const char *name;
     const char *descr;
     struct audio_option *options;
-    void *(*init) (void);
+    void *(*init) (Audiodev *);
     void (*fini) (void *);
     struct audio_pcm_ops *pcm_ops;
     int can_be_default;
@@ -190,6 +190,7 @@ struct SWVoiceCap {
 
 struct AudioState {
     struct audio_driver *drv;
+    Audiodev *dev;
     void *drv_opaque;
 
     QEMUTimer *ts;
@@ -200,6 +201,7 @@ struct AudioState {
     int nb_hw_voices_out;
     int nb_hw_voices_in;
     int vm_running;
+    int64_t period_ticks;
 };
 
 extern struct audio_driver no_audio_driver;
@@ -212,6 +214,8 @@ extern struct audio_driver dsound_audio_driver;
 extern struct audio_driver pa_audio_driver;
 extern struct audio_driver spice_audio_driver;
 extern const struct mixeng_volume nominal_volume;
+
+extern struct audio_driver *drvtab[];
 
 void audio_pcm_init_info (struct audio_pcm_info *info, struct audsettings *as);
 void audio_pcm_info_clear_buf (struct audio_pcm_info *info, void *buf, int len);
