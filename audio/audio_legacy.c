@@ -47,6 +47,17 @@ SimpleEnvMap global_map[] = {
     { /* End of list */ }
 };
 
+SimpleEnvMap alsa_map[] = {
+    { "QEMU_AUDIO_DAC_TRY_POLL", "alsa-out.try-poll", ENV_TRANSFORM_BOOL },
+    { "QEMU_AUDIO_ADC_TRY_POLL", "alsa-in.try-poll", ENV_TRANSFORM_BOOL },
+
+    { "QEMU_ALSA_THRESHOLD", "threshold", ENV_TRANSFORM_MILLIS_TO_USECS },
+    { "QEMU_ALSA_DAC_DEV", "alsa-out.dev" },
+    { "QEMU_ALSA_ADC_DEV", "alsa-in.dev" },
+
+    { /* End of list */ }
+};
+
 static unsigned long long toull(const char *str)
 {
     unsigned long long ret;
@@ -157,6 +168,54 @@ static void handle_env_opts(QemuOpts *opts, SimpleEnvMap *map)
     }
 }
 
+static void handle_alsa_side(QemuOpts *opts, int period, int buffer,
+                             const char *usec_env, const char *period_env,
+                             const char *buffer_env, const char *usec_opt,
+                             const char *count_opt, bool in)
+{
+    char *usec_s, *period_s, *buffer_s;
+    bool usec = false;
+
+    usec_s = getenv(usec_env);
+    if (usec_s) {
+        usec = toull(usec_s);
+    }
+
+    period_s = getenv(period_env);
+    if (period_s) {
+        period = toull(period_s);
+    }
+    if (!usec) {
+        period = frames_to_usecs(opts, period, in);
+    }
+    if (period_s) {
+        qemu_opt_set(opts, usec_opt, tostr(period), &error_abort);
+    }
+
+    buffer_s = getenv(buffer_env);
+    if (buffer_s) {
+        buffer = toull(buffer_s);
+        if (!usec) {
+            buffer = frames_to_usecs(opts, buffer, in);
+        }
+        printf("buffer %d period %d\n", buffer, period);
+        qemu_opt_set(opts, count_opt, tostr((buffer+period/2)/period),
+                     &error_abort);
+    }
+}
+
+static void handle_alsa(QemuOpts *opts)
+{
+    handle_alsa_side(opts, 1024, 4096,
+                     "QEMU_ALSA_DAC_SIZE_IN_USEC", "QEMU_ALSA_DAC_PERIOD_SIZE",
+                     "QEMU_ALSA_DAC_BUFFER_SIZE",
+                     "out.buffer-len", "out.buffer-count", false);
+    handle_alsa_side(opts, 0, 0,
+                     "QEMU_ALSA_ADC_SIZE_IN_USEC", "QEMU_ALSA_ADC_PERIOD_SIZE",
+                     "QEMU_ALSA_ADC_BUFFER_SIZE",
+                     "in.buffer-len", "in.buffer-count", true);
+}
+
 static void legacy_opt(const char *drv)
 {
     QemuOpts *opts;
@@ -165,6 +224,11 @@ static void legacy_opt(const char *drv)
     qemu_opt_set(opts, "driver", drv, &error_abort);
 
     handle_env_opts(opts, global_map);
+
+    if (strcmp(drv, "alsa") == 0) {
+        handle_env_opts(opts, alsa_map);
+        handle_alsa(opts);
+    }
 }
 
 void audio_handle_legacy_opts(void)
