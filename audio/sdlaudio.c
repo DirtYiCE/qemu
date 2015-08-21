@@ -391,7 +391,7 @@ static int sdl_ctl_out (HWVoiceOut *hw, int cmd, ...)
     return 0;
 }
 
-static void *sdl_audio_init (void)
+static void *sdl_audio_init(Audiodev *dev)
 {
     SDLAudioState *s = &glob_sdl;
     if (s->driver_created) {
