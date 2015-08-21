@@ -58,6 +58,14 @@ SimpleEnvMap alsa_map[] = {
     { /* End of list */ }
 };
 
+SimpleEnvMap coreaudio_map[] = {
+    { "QEMU_COREAUDIO_BUFFER_SIZE", "buffer-len",
+      ENV_TRANSFORM_FRAMES_TO_USECS_OUT },
+    { "QEMU_COREAUDIO_BUFFER_COUNT", "buffer-count" },
+
+    { /* End of list */ }
+};
+
 static unsigned long long toull(const char *str)
 {
     unsigned long long ret;
@@ -228,6 +236,8 @@ static void legacy_opt(const char *drv)
     if (strcmp(drv, "alsa") == 0) {
         handle_env_opts(opts, alsa_map);
         handle_alsa(opts);
+    } else if (strcmp(drv, "coreaudio") == 0) {
+        handle_env_opts(opts, coreaudio_map);
     }
 }
 
