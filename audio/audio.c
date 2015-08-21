@@ -55,7 +55,8 @@ struct audio_driver *drvtab[] = {
     NULL
 };
 
-static AudioState glob_audio_state;
+static QTAILQ_HEAD(AudioStateHead, AudioState) audio_states =
+    QTAILQ_HEAD_INITIALIZER(audio_states);
 
 const struct mixeng_volume nominal_volume = {
     .mute = 0,
@@ -1193,11 +1194,14 @@ static void audio_run_capture (AudioState *s)
 
 void audio_run (const char *msg)
 {
-    AudioState *s = &glob_audio_state;
+    AudioState *s;
 
-    audio_run_out (s);
-    audio_run_in (s);
-    audio_run_capture (s);
+    QTAILQ_FOREACH(s, &audio_states, list) {
+        audio_run_out (s);
+        audio_run_in (s);
+        audio_run_capture (s);
+    }
+
 #ifdef DEBUG_POLL
     {
         static double prevtime;
@@ -1252,9 +1256,8 @@ static void audio_vm_change_state_handler (void *opaque, int running,
     audio_reset_timer (s);
 }
 
-static void audio_atexit (void)
+static void free_audio_state(AudioState *s)
 {
-    AudioState *s = &glob_audio_state;
     HWVoiceOut *hwo = NULL;
     HWVoiceIn *hwi = NULL;
 
@@ -1288,6 +1291,16 @@ static void audio_atexit (void)
     }
 
     qapi_free_Audiodev(s->dev);
+    g_free(s);
+}
+
+static void audio_atexit(void)
+{
+    while (!QTAILQ_EMPTY(&audio_states)) {
+        AudioState *s = QTAILQ_FIRST(&audio_states);
+        QTAILQ_REMOVE(&audio_states, s, list);
+        free_audio_state(s);
+    }
 }
 
 static const VMStateDescription vmstate_audio = {
@@ -1300,26 +1313,27 @@ static const VMStateDescription vmstate_audio = {
 };
 
 static Audiodev *parse_option(QemuOpts *opts, Error **errp);
-static int audio_init(Audiodev *dev)
+
+/* if we have dev, this function was called because of an -audiodev argument =>
+ *   initialize a new state with it
+ * if dev == NULL => legacy implicit initialization, return the already created
+ *   state or create a new one */
+static AudioState *audio_init(Audiodev *dev)
 {
+    static bool atexit_registered;
     size_t i;
     int done = 0;
     const char *drvname = NULL;
     VMChangeStateEntry *e;
-    AudioState *s = &glob_audio_state;
+    AudioState *s;
     QemuOptsList *list = NULL; /* silence gcc warning about uninitialized
                                 * variable */
 
-    if (s->drv) {
-        if (dev) {
-            dolog("Cannot create more than one audio backend, sorry\n");
-            qapi_free_Audiodev(dev);
-        }
-        return -1;
-    }
-
     if (dev) {
         drvname = AudiodevDriver_lookup[dev->kind];
+    } else if (!QTAILQ_EMPTY(&audio_states)) {
+        /* todo: chack for -audiodev we have normal audiodev selection support */
+        return QTAILQ_FIRST(&audio_states);
     } else {
         audio_handle_legacy_opts();
         list = qemu_find_opts("audiodev");
@@ -1328,12 +1342,18 @@ static int audio_init(Audiodev *dev)
             exit(1);
         }
     }
+
+    s = g_malloc0(sizeof(AudioState));
     s->dev = dev;
 
     QLIST_INIT (&s->hw_head_out);
     QLIST_INIT (&s->hw_head_in);
     QLIST_INIT (&s->cap_head);
-    atexit (audio_atexit);
+    if (!atexit_registered) {
+        atexit(audio_atexit);
+        atexit_registered = true;
+    }
+    QTAILQ_INSERT_TAIL(&audio_states, s, list);
 
     s->ts = timer_new_ns(QEMU_CLOCK_VIRTUAL, audio_timer, s);
     if (!s->ts) {
@@ -1414,15 +1434,18 @@ static int audio_init(Audiodev *dev)
 
     QLIST_INIT (&s->card_head);
     vmstate_register (NULL, 0, &vmstate_audio, s);
-    return 0;
+    return s;
 }
 
 void AUD_register_card (const char *name, QEMUSoundCard *card)
 {
-    audio_init(NULL);
+    if (!card->state) {
+        card->state = audio_init(NULL);
+    }
+
     card->name = g_strdup (name);
     memset (&card->entries, 0, sizeof (card->entries));
-    QLIST_INSERT_HEAD (&glob_audio_state.card_head, card, entries);
+    QLIST_INSERT_HEAD (&card->state->card_head, card, entries);
 }
 
 void AUD_remove_card (QEMUSoundCard *card)
@@ -1432,15 +1455,20 @@ void AUD_remove_card (QEMUSoundCard *card)
 }
 
 
-CaptureVoiceOut *AUD_add_capture (
+CaptureVoiceOut *AUD_add_capture(
+    AudioState *s,
     struct audsettings *as,
     struct audio_capture_ops *ops,
     void *cb_opaque
     )
 {
-    AudioState *s = &glob_audio_state;
     CaptureVoiceOut *cap;
     struct capture_callback *cb;
+
+    if (!s) {
+        /* todo: remove when we have normal audiodev selection support */
+        s = QTAILQ_FIRST(&audio_states);
+    }
 
     if (audio_validate_settings (as)) {
         dolog ("Invalid settings were passed when trying to add capture\n");
@@ -1677,7 +1705,7 @@ static int each_option(void *opaque, QemuOpts *opts, Error **errp)
     if (!dev) {
         return -1;
     }
-    return audio_init(dev);
+    return audio_init(dev) ? 0 : -1;
 }
 
 void audio_set_options(void)
@@ -1742,4 +1770,26 @@ int audio_buffer_bytes(AudiodevPerDirectionOptions *pdo,
 {
     return audio_buffer_samples(pdo, as, def_usecs) *
         audioformat_bytes_per_sample(as->fmt);
+}
+
+AudioState *audio_state_by_name(const char *name)
+{
+    AudioState *s;
+    QTAILQ_FOREACH(s, &audio_states, list) {
+        assert(s->dev);
+        if (strcmp(name, s->dev->id) == 0) {
+            return s;
+        }
+    }
+    return NULL;
+}
+
+const char *audio_get_id(QEMUSoundCard *card)
+{
+    if (card->state) {
+        assert(card->state->dev);
+        return card->state->dev->id;
+    } else {
+        return "";
+    }
 }

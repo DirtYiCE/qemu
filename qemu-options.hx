@@ -1538,6 +1538,11 @@ everybody else.  'ignore' completely ignores the shared flag and
 allows everybody connect unconditionally.  Doesn't conform to the rfb
 spec but is traditional QEMU behavior.
 
+@item audiodev=@var{audiodev}
+
+Use the specified @var{audiodev} when the VNC client requests audio
+transmission.
+
 @end table
 ETEXI
 
