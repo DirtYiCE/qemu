@@ -100,6 +100,11 @@ SimpleEnvMap pa_map[] = {
     { /* End of list */ }
 };
 
+SimpleEnvMap sdl_map[] = {
+    { "QEMU_SDL_SAMPLES", "buffer-len", ENV_TRANSFORM_SAMPLES_TO_USECS_OUT },
+    { /* End of list */ }
+};
+
 static unsigned long long toull(const char *str)
 {
     unsigned long long ret;
@@ -278,6 +283,8 @@ static void legacy_opt(const char *drv)
         handle_env_opts(opts, oss_map);
     } else if (strcmp(drv, "pa") == 0) {
         handle_env_opts(opts, pa_map);
+    } else if (strcmp(drv, "sdl") == 0) {
+        handle_env_opts(opts, sdl_map);
     }
 }
 
