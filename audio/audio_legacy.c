@@ -91,6 +91,15 @@ SimpleEnvMap oss_map[] = {
     { /* End of list */ }
 };
 
+SimpleEnvMap pa_map[] = {
+    { "QEMU_PA_SAMPLES", "buffer", ENV_TRANSFORM_SAMPLES_TO_USECS_OUT },
+    { "QEMU_PA_SERVER", "server" },
+    { "QEMU_PA_SINK", "sink.name" },
+    { "QEMU_PA_SOURCE", "source.name" },
+
+    { /* End of list */ }
+};
+
 static unsigned long long toull(const char *str)
 {
     unsigned long long ret;
@@ -267,6 +276,8 @@ static void legacy_opt(const char *drv)
         handle_env_opts(opts, dsound_map);
     } else if (strcmp(drv, "oss") == 0) {
         handle_env_opts(opts, oss_map);
+    } else if (strcmp(drv, "pa") == 0) {
+        handle_env_opts(opts, pa_map);
     }
 }
 
