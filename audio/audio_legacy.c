@@ -105,6 +105,14 @@ SimpleEnvMap sdl_map[] = {
     { /* End of list */ }
 };
 
+SimpleEnvMap wav_map[] = {
+    { "QEMU_WAV_FREQUENCY", "out.frequency" },
+    { "QEMU_WAV_FORMAT", "out.format", ENV_TRANSFORM_FMT },
+    { "QEMU_WAV_DAC_FIXED_CHANNELS", "out.channels" },
+    { "QEMU_WAV_PATH", "path" },
+    { /* End of list */ }
+};
+
 static unsigned long long toull(const char *str)
 {
     unsigned long long ret;
@@ -285,6 +293,8 @@ static void legacy_opt(const char *drv)
         handle_env_opts(opts, pa_map);
     } else if (strcmp(drv, "sdl") == 0) {
         handle_env_opts(opts, sdl_map);
+    } else if (strcmp(drv, "wav") == 0) {
+        handle_env_opts(opts, wav_map);
     }
 }
 
