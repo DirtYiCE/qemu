@@ -66,6 +66,16 @@ SimpleEnvMap coreaudio_map[] = {
     { /* End of list */ }
 };
 
+SimpleEnvMap dsound_map[] = {
+    { "QEMU_DSOUND_LATENCY_MILLIS", "latency", ENV_TRANSFORM_MILLIS_TO_USECS },
+    { "QEMU_DSOUND_BUFSIZE_OUT", "out.buffer-len",
+      ENV_TRANSFORM_BYTES_TO_USECS_OUT },
+    { "QEMU_DSOUND_BUFSIZE_IN", "in.buffer-len",
+      ENV_TRANSFORM_BYTES_TO_USECS_IN },
+
+    { /* End of list */ }
+};
+
 static unsigned long long toull(const char *str)
 {
     unsigned long long ret;
@@ -238,6 +248,8 @@ static void legacy_opt(const char *drv)
         handle_alsa(opts);
     } else if (strcmp(drv, "coreaudio") == 0) {
         handle_env_opts(opts, coreaudio_map);
+    } else if (strcmp(drv, "dsound") == 0) {
+        handle_env_opts(opts, dsound_map);
     }
 }
 
