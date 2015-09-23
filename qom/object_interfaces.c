@@ -119,7 +119,7 @@ Object *user_creatable_add_opts(QemuOpts *opts, Error **errp)
     qemu_opts_set_id(opts, NULL);
     pdict = qemu_opts_to_qdict(opts, NULL);
 
-    v = opts_visitor_new(opts);
+    v = opts_visitor_new(opts, false);
     obj = user_creatable_add_type(type, id, pdict, v, errp);
     visit_free(v);
 

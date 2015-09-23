@@ -220,7 +220,7 @@ static int parse_numa(void *opaque, QemuOpts *opts, Error **errp)
     NumaOptions *object = NULL;
     MachineState *ms = MACHINE(opaque);
     Error *err = NULL;
-    Visitor *v = opts_visitor_new(opts);
+    Visitor *v = opts_visitor_new(opts, false);
 
     visit_type_NumaOptions(v, NULL, &object, &err);
     visit_free(v);

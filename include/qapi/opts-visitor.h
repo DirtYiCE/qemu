@@ -33,6 +33,6 @@ typedef struct OptsVisitor OptsVisitor;
  * (other than integers), null, or arbitrary QTypes. It also requires a
  * non-null list argument to visit_start_list().
  */
-Visitor *opts_visitor_new(const QemuOpts *opts);
+Visitor *opts_visitor_new(const QemuOpts *opts, bool nested);
 
 #endif

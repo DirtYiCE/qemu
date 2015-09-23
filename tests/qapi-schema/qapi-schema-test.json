@@ -149,6 +149,11 @@
 # Smoke test on out-of-band and allow-preconfig-test
 { 'command': 'test-flags-command', 'allow-oob': true, 'allow-preconfig': true }
 
+# For testing hierarchy support in opts-visitor
+{ 'struct': 'UserDefOptionsSub',
+  'data': {
+    '*nint': 'int' } }
+
 # For testing integer range flattening in opts-visitor. The following schema
 # corresponds to the option format:
 #
@@ -162,7 +167,9 @@
     '*u64' : [ 'uint64' ],
     '*u16' : [ 'uint16' ],
     '*i64x':   'int'     ,
-    '*u64x':   'uint64'  } }
+    '*u64x':   'uint64'  ,
+    'sub0':    'UserDefOptionsSub',
+    'sub1':    'UserDefOptionsSub' } }
 
 # testing event
 { 'struct': 'EventStructOne',

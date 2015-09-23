@@ -200,12 +200,16 @@ command boxed-union UserDefNativeListUnion -> None
    gen=True success_response=True boxed=True oob=False preconfig=False
 command test-flags-command None -> None
    gen=True success_response=True boxed=False oob=True preconfig=True
+object UserDefOptionsSub
+    member nint: int optional=True
 object UserDefOptions
     member i64: intList optional=True
     member u64: uint64List optional=True
     member u16: uint16List optional=True
     member i64x: int optional=True
     member u64x: uint64 optional=True
+    member sub0: UserDefOptionsSub optional=False
+    member sub1: UserDefOptionsSub optional=False
 object EventStructOne
     member struct1: UserDefOne optional=False
     member string: str optional=False

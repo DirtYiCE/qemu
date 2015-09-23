@@ -43,7 +43,7 @@ setup_fixture(OptsVisitorFixture *f, gconstpointer test_data)
                            NULL);
     g_assert(opts != NULL);
 
-    v = opts_visitor_new(opts);
+    v = opts_visitor_new(opts, true);
     visit_type_UserDefOptions(v, NULL, &f->userdef, &f->err);
     visit_free(v);
     qemu_opts_del(opts);
@@ -170,6 +170,34 @@ expect_u64_max(OptsVisitorFixture *f, gconstpointer test_data)
     g_assert(f->userdef->u64->value == UINT64_MAX);
 }
 
+static void
+expect_both(OptsVisitorFixture *f, gconstpointer test_data)
+{
+    expect_ok(f, test_data);
+    g_assert(f->userdef->sub0->has_nint);
+    g_assert(f->userdef->sub0->nint == 13);
+    g_assert(f->userdef->sub1->has_nint);
+    g_assert(f->userdef->sub1->nint == 17);
+}
+
+static void
+expect_sub0(OptsVisitorFixture *f, gconstpointer test_data)
+{
+    expect_ok(f, test_data);
+    g_assert(f->userdef->sub0->has_nint);
+    g_assert(f->userdef->sub0->nint == 13);
+    g_assert(!f->userdef->sub1->has_nint);
+}
+
+static void
+expect_sub1(OptsVisitorFixture *f, gconstpointer test_data)
+{
+    expect_ok(f, test_data);
+    g_assert(!f->userdef->sub0->has_nint);
+    g_assert(f->userdef->sub1->has_nint);
+    g_assert(f->userdef->sub1->nint == 13);
+}
+
 /* test cases */
 
 static void
@@ -184,7 +212,7 @@ test_opts_range_unvisited(void)
     opts = qemu_opts_parse(qemu_find_opts("userdef"), "ilist=0-2", false,
                            &error_abort);
 
-    v = opts_visitor_new(opts);
+    v = opts_visitor_new(opts, false);
 
     visit_start_struct(v, NULL, NULL, 0, &error_abort);
 
@@ -225,7 +253,7 @@ test_opts_range_beyond(void)
     opts = qemu_opts_parse(qemu_find_opts("userdef"), "ilist=0", false,
                            &error_abort);
 
-    v = opts_visitor_new(opts);
+    v = opts_visitor_new(opts, false);
 
     visit_start_struct(v, NULL, NULL, 0, &error_abort);
 
@@ -260,7 +288,7 @@ test_opts_dict_unvisited(void)
     opts = qemu_opts_parse(qemu_find_opts("userdef"), "i64x=0,bogus=1", false,
                            &error_abort);
 
-    v = opts_visitor_new(opts);
+    v = opts_visitor_new(opts, false);
     visit_type_UserDefOptions(v, NULL, &userdef, &err);
     error_free_or_abort(&err);
     visit_free(v);
@@ -365,6 +393,13 @@ main(int argc, char **argv)
                     test_opts_range_beyond);
 
     g_test_add_func("/visitor/opts/dict/unvisited", test_opts_dict_unvisited);
+
+    /* Test nested structs support */
+    add_test("/visitor/opts/nested/unqualified", &expect_fail, "nint=13");
+    add_test("/visitor/opts/nested/both",        &expect_both,
+             "sub0.nint=13,sub1.nint=17");
+    add_test("/visitor/opts/nested/sub0",        &expect_sub0, "sub0.nint=13");
+    add_test("/visitor/opts/nested/sub1",        &expect_sub1, "sub1.nint=13");
 
     g_test_run();
     return 0;

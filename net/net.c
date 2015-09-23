@@ -1106,7 +1106,7 @@ static int net_client_init(QemuOpts *opts, bool is_netdev, Error **errp)
     void *object = NULL;
     Error *err = NULL;
     int ret = -1;
-    Visitor *v = opts_visitor_new(opts);
+    Visitor *v = opts_visitor_new(opts, false);
 
     const char *type = qemu_opt_get(opts, "type");
 
