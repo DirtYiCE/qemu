@@ -30,7 +30,7 @@ typedef struct OptsVisitor OptsVisitor;
  * - values below INT64_MIN or LLONG_MIN are rejected,
  * - values above INT64_MAX or LLONG_MAX are rejected.
  */
-OptsVisitor *opts_visitor_new(const QemuOpts *opts);
+OptsVisitor *opts_visitor_new(const QemuOpts *opts, bool nested);
 void opts_visitor_cleanup(OptsVisitor *nv);
 Visitor *opts_get_visitor(OptsVisitor *nv);
 

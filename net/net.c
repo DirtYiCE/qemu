@@ -1049,7 +1049,7 @@ int net_client_init(QemuOpts *opts, int is_netdev, Error **errp)
     int ret = -1;
 
     {
-        OptsVisitor *ov = opts_visitor_new(opts);
+        OptsVisitor *ov = opts_visitor_new(opts, false);
 
         net_visit(opts_get_visitor(ov), is_netdev, &object, &err);
         opts_visitor_cleanup(ov);

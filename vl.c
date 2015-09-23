@@ -2835,7 +2835,7 @@ static int object_create(void *opaque, QemuOpts *opts, Error **errp)
     QDict *pdict;
     bool (*type_predicate)(const char *) = opaque;
 
-    ov = opts_visitor_new(opts);
+    ov = opts_visitor_new(opts, false);
     pdict = qemu_opts_to_qdict(opts, NULL);
 
     visit_start_struct(opts_get_visitor(ov), &dummy, NULL, NULL, 0, &err);

@@ -153,6 +153,10 @@ object UserDefOptions
     member u16: uint16List optional=True
     member i64x: int optional=True
     member u64x: uint64 optional=True
+    member sub0: UserDefOptionsSub optional=False
+    member sub1: UserDefOptionsSub optional=False
+object UserDefOptionsSub
+    member nint: int optional=True
 object UserDefTwo
     member string0: str optional=False
     member dict1: UserDefTwoDict optional=False

@@ -1676,7 +1676,7 @@ void hmp_object_add(Monitor *mon, const QDict *qdict)
         goto out;
     }
 
-    ov = opts_visitor_new(opts);
+    ov = opts_visitor_new(opts, false);
     pdict = qdict_clone_shallow(qdict);
 
     visit_start_struct(opts_get_visitor(ov), &dummy, NULL, NULL, 0, &err);

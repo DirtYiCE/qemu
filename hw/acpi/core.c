@@ -241,7 +241,7 @@ void acpi_table_add(const QemuOpts *opts, Error **errp)
     {
         OptsVisitor *ov;
 
-        ov = opts_visitor_new(opts);
+        ov = opts_visitor_new(opts, false);
         visit_type_AcpiTableOptions(opts_get_visitor(ov), &hdrs, NULL, &err);
         opts_visitor_cleanup(ov);
     }
